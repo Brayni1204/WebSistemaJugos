@@ -392,4 +392,55 @@
         }
     </script>
 
+    {{-- ✅ NUEVO SCRIPT PARA WEBSOCKETS --}}
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const socketUrl = "ws://127.0.0.1:8090";
+            let socket;
+
+            function connect() {
+                socket = new WebSocket(socketUrl);
+
+                socket.onopen = function() {
+                    console.log("Conexión WebSocket establecida con el servidor.");
+                };
+
+                socket.onmessage = function(event) {
+                    const message = event.data;
+                    console.log("Notificación recibida: " + message);
+
+                    // Muestra una notificación bonita con SweetAlert2
+                    Swal.fire({
+                        title: '¡Atención!',
+                        text: message,
+                        icon: 'info',
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 5000,
+                        timerProgressBar: true
+                    });
+
+                    // Recarga la página después de un momento para ver el nuevo pedido
+                    setTimeout(() => {
+                        location.reload();
+                    }, 2000); // Recarga después de 2 segundos
+                };
+
+                socket.onclose = function() {
+                    console.log("Conexión WebSocket cerrada. Intentando reconectar en 3 segundos...");
+                    // Intenta reconectar automáticamente si la conexión se pierde
+                    setTimeout(connect, 3000);
+                };
+
+                socket.onerror = function(error) {
+                    console.error("Error en la conexión WebSocket:", error);
+                    socket.close(); // Cierra para forzar la reconexión desde onclose
+                };
+            }
+
+            connect(); // Inicia la conexión al cargar la página
+        });
+    </script>
+
 @stop

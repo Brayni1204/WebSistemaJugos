@@ -13,9 +13,31 @@ use Illuminate\Support\Facades\Http;
 use MercadoPago\Client\Preference\PreferenceClient;
 use MercadoPago\Exceptions\MPApiException;
 use MercadoPago\MercadoPagoConfig;
+use Ratchet\Client\Connector; // 👈 CAMBIA esta línea
+use React\EventLoop\Factory;
 
 class NuevosPedidosController extends Controller
 {
+    private function enviarNotificacion($mensaje)
+    {
+        try {
+            // Este es el nuevo código para enviar el mensaje con la nueva librería
+            $loop = Factory::create();
+            $connector = new Connector($loop);
+
+            $connector('ws://127.0.0.1:8090')->then(function ($conn) use ($mensaje) {
+                $conn->send($mensaje);
+                $conn->close();
+            }, function ($e) {
+                // \Log::error("No se pudo conectar: {$e->getMessage()}");
+            });
+
+            $loop->run();
+        } catch (\Exception $e) {
+            // \Log::error('Error general de WebSocket: ' . $e->getMessage());
+        }
+    }
+
     public function verPedido(Request $request)
     {
         $mesaUuid = $request->query('mesa');
@@ -118,6 +140,8 @@ class NuevosPedidosController extends Controller
             $mesa->update(['estado' => 'ocupada']);
         }
 
+        $this->enviarNotificacion("¡Hay un nuevo pedido!");
+
         // ✅ En vez de redirigir, enviamos solo el mensaje de éxito
         return response()->json([
             'message' => 'Pedido registrado con éxito',
@@ -181,6 +205,7 @@ class NuevosPedidosController extends Controller
                 'total_pago' => $nuevoSubtotal + ($pedido->costo_delivery ?? 0)
             ]);
 
+            $this->enviarNotificacion("Se ha actualizado un pedido.");
 
             return response()->json(['success' => 'Pedido actualizado con éxito.']);
         } catch (\Exception $e) {

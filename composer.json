@@ -24,6 +24,7 @@
         "mercadopago/dx-php": "^3.4",
         "psy/psysh": "*",
         "pusher/pusher-php-server": "^7.2",
+        "ratchet/pawl": "^0.4.3",
         "spatie/laravel-permission": "^6.12",
         "stripe/stripe-php": "^16.5"
     },
