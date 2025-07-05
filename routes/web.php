@@ -17,6 +17,8 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\PagoMercadoController;
 
+Route::get('/pedido-detalle-actualizado/{pedido_id}', [NuevosPedidosController::class, 'obtenerDetallesParaCliente'])->name('pedido.detalles.cliente');
+
 
 Route::post('/pedidos/pagar/{pedido}', [PedidoController::class, 'procesarPago'])->name('pedido.pagar');
 Route::get('/pedidos/pago-exitoso/{pedido}', [PedidoController::class, 'pagoExitoso'])->name('pago.exitoso');
@@ -72,3 +74,5 @@ Route::post('/carrito/vaciar', [CarritoController::class, 'vaciarCarrito'])->nam
 Route::post('/pedido/realizar', [CarritoController::class, 'realizarPedido'])->name('pedido.realizar');
 
 Route::get('/{pagina}/{subtitulo}', [ParrafoController::class, 'parrafo'])->name('views.parrafo');
+
+// En routes/web.php

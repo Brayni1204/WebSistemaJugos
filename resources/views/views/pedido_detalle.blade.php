@@ -117,7 +117,7 @@
                             <div style="display: flex; justify-content: center; padding-bottom: 20px">
                                 <h2>Jugos en Tu Pedido</h2>
                             </div>
-                            <div
+                            <div id="lista-productos-cliente"
                                 style="width: 100%; display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center;">
                                 @foreach ($pedido->detalles as $detalle)
                                     <div
@@ -603,6 +603,52 @@
                     }
                 });
             });
+        });
+    </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const pedidoId = {{ $pedido->id }};
+
+            // Función que pide el HTML actualizado y lo pone en la vista
+            function actualizarDetallesCliente() {
+                // ✅ Usa la ruta nombrada para evitar errores 404
+                fetch(`{{ route('pedido.detalles.cliente', ['pedido_id' => $pedido->id]) }}`)
+                    .then(response => response.text())
+                    .then(html => {
+                        document.getElementById('lista-productos-cliente').innerHTML = html;
+                        console.log("✅ Detalles del cliente actualizados.");
+                    })
+                    .catch(error => console.error('❌ Error al actualizar detalles:', error));
+            }
+
+            function connectWebSocket() {
+                const socket = new WebSocket("ws://127.0.0.1:8090");
+                socket.onopen = () => console.log("🟢 Conectado como cliente.");
+                socket.onclose = () => setTimeout(connectWebSocket, 3000);
+                socket.onerror = (error) => console.error("🔴 Error:", error);
+
+                socket.onmessage = function(event) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        // Si el pedido fue actualizado, cancelado o completado...
+                        if (data.action !== 'nuevo') {
+                            Swal.fire({
+                                toast: true,
+                                position: 'top-end',
+                                icon: 'info',
+                                title: '¡Tu pedido fue actualizado!',
+                                showConfirmButton: false,
+                                timer: 3000
+                            });
+                            // ...actualiza la lista de productos.
+                            actualizarDetallesCliente();
+                        }
+                    } catch (e) {
+                        console.error("Error al procesar mensaje:", event.data, e);
+                    }
+                };
+            }
+            connectWebSocket();
         });
     </script>
 </body>

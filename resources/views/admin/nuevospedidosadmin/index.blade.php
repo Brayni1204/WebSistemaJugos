@@ -49,7 +49,7 @@
                             <th>Acciones</th>
                         </tr>
                     </thead>
-                    <tbody class="text-center">
+                    <tbody class="text-center" id="tabla-pedidos-body">
                         @foreach ($pedidos as $pedido)
                             <tr>
                                 <td>{{ $pedido->id }}</td>
@@ -392,54 +392,53 @@
         }
     </script>
 
-    {{-- ✅ NUEVO SCRIPT PARA WEBSOCKETS --}}
+    {{-- ✅ SCRIPT WEBSOCKET MEJORADO PARA ACTUALIZAR SOLO LA TABLA --}}
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            const socketUrl = "ws://127.0.0.1:8090";
-            let socket;
-
-            function connect() {
-                socket = new WebSocket(socketUrl);
-
-                socket.onopen = function() {
-                    console.log("Conexión WebSocket establecida con el servidor.");
-                };
-
-                socket.onmessage = function(event) {
-                    const message = event.data;
-                    console.log("Notificación recibida: " + message);
-
-                    // Muestra una notificación bonita con SweetAlert2
-                    Swal.fire({
-                        title: '¡Atención!',
-                        text: message,
-                        icon: 'info',
-                        toast: true,
-                        position: 'top-end',
-                        showConfirmButton: false,
-                        timer: 5000,
-                        timerProgressBar: true
-                    });
-
-                    // Recarga la página después de un momento para ver el nuevo pedido
-                    setTimeout(() => {
-                        location.reload();
-                    }, 2000); // Recarga después de 2 segundos
-                };
-
-                socket.onclose = function() {
-                    console.log("Conexión WebSocket cerrada. Intentando reconectar en 3 segundos...");
-                    // Intenta reconectar automáticamente si la conexión se pierde
-                    setTimeout(connect, 3000);
-                };
-
-                socket.onerror = function(error) {
-                    console.error("Error en la conexión WebSocket:", error);
-                    socket.close(); // Cierra para forzar la reconexión desde onclose
-                };
+            // Función que pide el nuevo contenido de la tabla y lo reemplaza
+            function actualizarContenidoTabla() {
+                fetch("{{ route('admin.nuevospedidos.actualizarTabla') }}")
+                    .then(response => response.text())
+                    .then(html => {
+                        document.getElementById('tabla-pedidos-body').innerHTML = html;
+                    })
+                    .catch(error => console.error('❌ Error al actualizar la tabla:', error));
             }
 
-            connect(); // Inicia la conexión al cargar la página
+            function connectWebSocket() {
+                const socket = new WebSocket("ws://127.0.0.1:8090");
+
+                socket.onopen = () => console.log("🟢 Conexión WebSocket establecida en la página principal.");
+                socket.onclose = () => setTimeout(connectWebSocket, 10000); // Intenta reconectar
+                socket.onerror = (error) => console.error("🔴 Error de WebSocket:", error);
+
+                socket.onmessage = function(event) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'info',
+                            title: data.message,
+                            showConfirmButton: false,
+                            timer: 4000
+                        });
+
+                        // Si la acción fue completar o cancelar, recarga la página
+                        // porque un pedido podría desaparecer de la lista.
+                        if (data.action === 'completado' || data.action === 'cancelado') {
+                            setTimeout(() => location.reload(), 1500);
+                        } else {
+                            // Para cualquier otra acción (nuevo, actualizado), solo refresca la tabla
+                            actualizarContenidoTabla();
+                        }
+
+                    } catch (e) {
+                        console.error("Error al procesar mensaje:", event.data);
+                    }
+                };
+            }
+            connectWebSocket();
         });
     </script>
 

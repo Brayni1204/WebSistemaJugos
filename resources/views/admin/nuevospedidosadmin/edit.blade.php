@@ -563,6 +563,42 @@
             aplicarExclusividad('grupo-azucar');
         });
     </script>
+    {{-- ✅ AÑADE ESTE NUEVO SCRIPT AL FINAL --}}
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            function connectWebSocket() {
+                const socket = new WebSocket("ws://127.0.0.1:8090");
+
+                socket.onopen = () => console.log("🟢 Conexión WebSocket establecida en la página de EDICIÓN.");
+                socket.onclose = () => setTimeout(connectWebSocket, 3000);
+                socket.onerror = (error) => console.error("🔴 Error de WebSocket:", error);
+
+                socket.onmessage = function(event) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        console.log("📩 Notificación recibida en EDIT:", data);
+
+                        // Muestra una notificación bonita
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'info',
+                            title: data.message, // Usa el mensaje del servidor
+                            showConfirmButton: false,
+                            timer: 3000
+                        });
+
+                        // ✅ Llama a la función que ya tienes para refrescar la tabla de productos
+                        actualizarTablaProductos();
+
+                    } catch (e) {
+                        console.error("Error al procesar mensaje:", event.data, e);
+                    }
+                };
+            }
+            connectWebSocket();
+        });
+    </script>
 @stop
 
 @section('css')

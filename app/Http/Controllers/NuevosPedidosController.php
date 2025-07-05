@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Traits\NotificaWebSocket;
 use App\Models\Categoria;
 use App\Models\Cliente;
 use App\Models\DetallePedido;
@@ -18,25 +19,7 @@ use React\EventLoop\Factory;
 
 class NuevosPedidosController extends Controller
 {
-    private function enviarNotificacion($mensaje)
-    {
-        try {
-            // Este es el nuevo código para enviar el mensaje con la nueva librería
-            $loop = Factory::create();
-            $connector = new Connector($loop);
-
-            $connector('ws://127.0.0.1:8090')->then(function ($conn) use ($mensaje) {
-                $conn->send($mensaje);
-                $conn->close();
-            }, function ($e) {
-                // \Log::error("No se pudo conectar: {$e->getMessage()}");
-            });
-
-            $loop->run();
-        } catch (\Exception $e) {
-            // \Log::error('Error general de WebSocket: ' . $e->getMessage());
-        }
-    }
+    use NotificaWebSocket;
 
     public function verPedido(Request $request)
     {
@@ -140,7 +123,8 @@ class NuevosPedidosController extends Controller
             $mesa->update(['estado' => 'ocupada']);
         }
 
-        $this->enviarNotificacion("¡Hay un nuevo pedido!");
+        $this->enviarNotificacion('nuevo', "¡Un cliente ha creado un nuevo pedido!");
+
 
         // ✅ En vez de redirigir, enviamos solo el mensaje de éxito
         return response()->json([
@@ -205,7 +189,8 @@ class NuevosPedidosController extends Controller
                 'total_pago' => $nuevoSubtotal + ($pedido->costo_delivery ?? 0)
             ]);
 
-            $this->enviarNotificacion("Se ha actualizado un pedido.");
+            $this->enviarNotificacion('actualizado', "Un cliente ha actualizado el pedido #{$id}");
+
 
             return response()->json(['success' => 'Pedido actualizado con éxito.']);
         } catch (\Exception $e) {
@@ -282,5 +267,13 @@ class NuevosPedidosController extends Controller
         ]);
 
         return redirect()->route('views.pedidos')->with('success', 'Pago realizado con éxito.');
+    }
+
+    public function obtenerDetallesParaCliente($pedido_id)
+    {
+        $pedido = Pedido::with('detalles.producto.image')->findOrFail($pedido_id);
+
+        // ✅ AÑADE ->render() AL FINAL DE ESTA LÍNEA
+        return view('views.partials.detalles_cliente', compact('pedido'))->render();
     }
 }

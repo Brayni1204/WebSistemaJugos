@@ -3,15 +3,20 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Traits\NotificaWebSocket;
 use App\Models\DetallePedido;
 use App\Models\Empresa;
 use App\Models\Pedido;
 use App\Models\Producto;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Ratchet\Client\Connector; // 👈 CAMBIA esta línea
+use React\EventLoop\Factory;
 
 class CreandoNuevosPedidosDetalleController extends Controller
 {
+    use NotificaWebSocket;
+
     public function index() {}
     public function create() {}
     public function store(Request $request)
@@ -76,6 +81,9 @@ class CreandoNuevosPedidosDetalleController extends Controller
         $pedido->total_pago = $pedido->subtotal + $pedido->costo_delivery; // Asumiendo que el costo de delivery ya está establecido
         $pedido->save();
 
+        $this->enviarNotificacion('actualizado', "Se agregaron productos al pedido #{$pedido->id}");
+
+
         return response()->json([
             'success' => true,
             'message' => 'Producto agregado o actualizado en el pedido',
@@ -115,6 +123,8 @@ class CreandoNuevosPedidosDetalleController extends Controller
         $pedido->subtotal = \App\Models\DetallePedido::where('pedido_id', $pedido->id)->sum('precio_total');
         $pedido->total_pago = $pedido->subtotal + $pedido->costo_delivery;
         $pedido->save();
+        $this->enviarNotificacion('actualizado', "Se modificó el pedido #{$detalle->pedido_id}");
+
 
         return response()->json([
             'success' => true,
@@ -161,6 +171,7 @@ class CreandoNuevosPedidosDetalleController extends Controller
         // Guardar los cambios en el pedido
         $pedido->save();
 
+        $this->enviarNotificacion('actualizado', "Se eliminó un producto del pedido #{$detalle->pedido_id}");
         return response()->json([
             'success' => true,
             'message' => 'Producto eliminado del pedido',
