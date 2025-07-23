@@ -17,6 +17,7 @@ return new class extends Migration
             $table->integer('numero_mesa')->unique();
             $table->enum('estado', ['disponible', 'ocupada'])->default('disponible'); // ✅ Estado sin 'after'
             $table->text('codigo_qr')->nullable();
+            $table->enum('status', [1, 2])->default(1);
             $table->timestamps();
         });
     }

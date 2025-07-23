@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Traits\NotificaWebSocket;
 use App\Models\Cliente;
 use App\Models\DetallePedido;
 use App\Models\Direccion;
@@ -15,6 +16,8 @@ use Illuminate\Support\Facades\Auth;
 
 class CarritoController extends Controller
 {
+    use NotificaWebSocket;
+
     public function realizarPedido(Request $request)
     {
         try {
@@ -89,6 +92,7 @@ class CarritoController extends Controller
             $this->vaciarCarrito();
 
             // Redirigir a la vista de pedidos con un mensaje de éxito
+            $this->enviarNotificacion('nuevo', "¡Un cliente ha creado un nuevo pedido!");
 
             return redirect()->route('views.pedidos')->with('success', 'Pedido realizado con éxito.');
         } catch (\Exception $e) {
@@ -187,5 +191,4 @@ class CarritoController extends Controller
         LaraCart::destroyCart();
         return view('views.carrito', ['items' => LaraCart::getItems()]);
     }
-    
 }

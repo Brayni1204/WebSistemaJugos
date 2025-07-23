@@ -18,28 +18,36 @@ class CajaController extends Controller
     {
         return view('admin.reportes.index');
     }
+
     private function obtenerEstadisticas($ventas)
     {
         // Obtener el producto más vendido
-        $productoMasVendido = DB::table('productos')
-            ->select('productos.nombre_producto') // Especifica la tabla
-            ->join('detalle_ventas', 'productos.id', '=', 'detalle_ventas.producto_id') // Usa producto_id en lugar de id_producto
-            ->whereIn('detalle_ventas.venta_id', $ventas->pluck('id'))
-            ->groupBy('productos.id', 'productos.nombre_producto') // Agrupa correctamente
-            ->orderByRaw('SUM(detalle_ventas.cantidad) DESC')
-            ->limit(1)
-            ->pluck('productos.nombre_producto') // Extrae el nombre del producto
-            ->first() ?? 'N/A';
+        $productoMasVendido = 'N/A';
+        if ($ventas->isNotEmpty()) {
+            $productoMasVendido = DB::table('productos')
+                ->select('productos.nombre_producto')
+                ->join('detalle_ventas', 'productos.id', '=', 'detalle_ventas.producto_id')
+                ->whereIn('detalle_ventas.venta_id', $ventas->pluck('id'))
+                ->groupBy('productos.id', 'productos.nombre_producto')
+                ->orderByRaw('SUM(detalle_ventas.cantidad) DESC')
+                ->limit(1)
+                ->pluck('productos.nombre_producto')
+                ->first() ?? 'N/A';
+        }
 
         // Obtener clientes frecuentes
-        $clientesFrecuentes = DB::table('clientes')
-            ->select('clientes.nombre', DB::raw('COUNT(*) as total_compras'))
-            ->join('ventas', 'clientes.id', '=', 'ventas.cliente_id')
-            ->whereIn('ventas.id', $ventas->pluck('id'))
-            ->groupBy('clientes.id', 'clientes.nombre') // Agrega 'clientes.nombre' aquí
-            ->orderBy('total_compras', 'DESC')
-            ->limit(5)
-            ->get();
+        $clientesFrecuentes = collect();
+        if ($ventas->isNotEmpty()) {
+            $clientesFrecuentes = DB::table('clientes')
+                ->select('clientes.nombre', DB::raw('COUNT(*) as total_compras'))
+                ->join('ventas', 'clientes.id', '=', 'ventas.cliente_id')
+                ->whereIn('ventas.id', $ventas->pluck('id'))
+                ->groupBy('clientes.id', 'clientes.nombre')
+                ->orderBy('total_compras', 'DESC')
+                ->limit(5)
+                ->get();
+        }
+
 
         return [
             'producto_mas_vendido' => $productoMasVendido,
@@ -59,32 +67,22 @@ class CajaController extends Controller
                 return response()->json(['error' => 'Fecha requerida'], 400);
             }
 
-            // Lógica para obtener los datos del reporte (ejemplo)
-            $ventas = Venta::whereDate('created_at', $fecha)->sum('total_pago');
-            $productoMasVendido = Producto::select('productos.nombre_producto') // Especifica la tabla
-                ->join('detalle_ventas', 'productos.id', '=', 'detalle_ventas.producto_id')
-                ->groupBy('productos.id', 'productos.nombre_producto') // Agrupa correctamente
-                ->orderByRaw('SUM(detalle_ventas.cantidad) DESC')
-                ->limit(1)
-                ->pluck('productos.nombre_producto') // Especifica la tabla aquí también
-                ->first();
+            $ventasDelDia = Venta::whereDate('created_at', $fecha)->get();
+            $totalVentas = $ventasDelDia->sum('total_pago');
+            $cantidadPedidos = $ventasDelDia->count();
 
-
-            $clientesFrecuentes = Cliente::select('clientes.nombre', DB::raw('COUNT(*) as total_compras'))
-                ->join('ventas', 'clientes.id', '=', 'ventas.cliente_id')
-                ->groupBy('clientes.id', 'clientes.nombre') // Agrega 'clientes.nombre' aquí
-                ->orderBy('total_compras', 'DESC')
-                ->limit(5)
-                ->get();
+            $estadisticas = $this->obtenerEstadisticas($ventasDelDia);
 
 
             return response()->json([
-                'total_ventas' => $ventas,
-                'producto_mas_vendido' => $productoMasVendido ?? 'N/A',
-                'clientes_frecuentes' => $clientesFrecuentes
+                'fecha' => $fecha,
+                'total_ventas' => $totalVentas,
+                'cantidad_pedidos' => $cantidadPedidos,
+                'producto_mas_vendido' => $estadisticas['producto_mas_vendido'],
+                'clientes_frecuentes' => $estadisticas['clientes_frecuentes']
             ]);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Error al generar el reporte', 'message' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Error al generar el reporte diario', 'message' => $e->getMessage()], 500);
         }
     }
 
@@ -103,19 +101,16 @@ class CajaController extends Controller
             $ventas = Venta::whereBetween('created_at', [$inicioSemana, $finSemana])->with('detalles')->get();
             $totalVentas = $ventas->sum('total_pago');
 
-            $estadisticas = $ventas->isNotEmpty() ? $this->obtenerEstadisticas($ventas) : [
-                'producto_mas_vendido' => 'N/A',
-                'clientes_frecuentes' => [] // Asegurar que siempre haya un array
-            ];
+            $estadisticas = $this->obtenerEstadisticas($ventas);
 
             return response()->json([
                 'rango' => $inicioSemana->toDateString() . ' -> ' . $finSemana->toDateString(),
                 'total_ventas' => $totalVentas,
                 'producto_mas_vendido' => $estadisticas['producto_mas_vendido'],
-                'clientes_frecuentes' => $estadisticas['clientes_frecuentes'] // Asegurar que esté definido
+                'clientes_frecuentes' => $estadisticas['clientes_frecuentes']
             ]);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Error al generar el reporte', 'message' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Error al generar el reporte semanal', 'message' => $e->getMessage()], 500);
         }
     }
 
@@ -123,46 +118,66 @@ class CajaController extends Controller
     // 🔹 Reporte mensual
     public function reporteMensual(Request $request)
     {
-        $mes = $request->input('mes');
-        $anio = $request->input('anio', Carbon::now()->year); // Año actual por defecto
+        try {
+            $mes = $request->input('mes');
+            $anio = $request->input('anio', Carbon::now()->year); // Año actual por defecto
 
-        $ventas = Venta::whereYear('created_at', $anio)
-            ->whereMonth('created_at', $mes)
-            ->with('detalles')
-            ->get();
-        $totalVentas = $ventas->sum('total_pago');
+            if (!$mes) {
+                return response()->json(['error' => 'Mes requerido'], 400);
+            }
 
-        $estadisticas = $this->obtenerEstadisticas($ventas);
+            $ventas = Venta::whereYear('created_at', $anio)
+                ->whereMonth('created_at', $mes)
+                ->with('detalles')
+                ->get();
+            $totalVentas = $ventas->sum('total_pago');
 
-        return response()->json([
-            'mes' => $mes,
-            'anio' => $anio,
-            'total_ventas' => $totalVentas,
-            'producto_mas_vendido' => $estadisticas['producto_mas_vendido'],
-            'clientes_frecuentes' => $estadisticas['clientes_frecuentes']
-        ]);
+            $estadisticas = $this->obtenerEstadisticas($ventas);
+
+            return response()->json([
+                'mes' => $mes,
+                'anio' => $anio,
+                'total_ventas' => $totalVentas,
+                'producto_mas_vendido' => $estadisticas['producto_mas_vendido'],
+                'clientes_frecuentes' => $estadisticas['clientes_frecuentes']
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error al generar el reporte mensual', 'message' => $e->getMessage()], 500);
+        }
     }
 
     // 🔹 Reporte por rango de fechas
     public function reportePorRango(Request $request)
     {
-        $fechaInicio = Carbon::parse($request->input('fecha_inicio'));
-        $fechaFin = Carbon::parse($request->input('fecha_fin'))->endOfDay();
+        try {
+            $fechaInicio = $request->input('fecha_inicio');
+            $fechaFin = $request->input('fecha_fin');
 
-        $ventas = Venta::whereBetween('created_at', [$fechaInicio, $fechaFin])->with('detalles')->get();
-        $totalVentas = $ventas->sum('total_pago');
+            if (!$fechaInicio || !$fechaFin) {
+                return response()->json(['error' => 'Fechas de inicio y fin requeridas'], 400);
+            }
 
-        $estadisticas = $this->obtenerEstadisticas($ventas);
+            $fechaInicio = Carbon::parse($fechaInicio);
+            $fechaFin = Carbon::parse($fechaFin)->endOfDay();
 
-        return response()->json([
-            'rango' => "$fechaInicio -> $fechaFin",
-            'total_ventas' => $totalVentas,
-            'producto_mas_vendido' => $estadisticas['producto_mas_vendido'],
-            'clientes_frecuentes' => $estadisticas['clientes_frecuentes']
-        ]);
+            $ventas = Venta::whereBetween('created_at', [$fechaInicio, $fechaFin])->with('detalles')->get();
+            $totalVentas = $ventas->sum('total_pago');
+
+            $estadisticas = $this->obtenerEstadisticas($ventas);
+
+            return response()->json([
+                'rango' => $fechaInicio->toDateString() . ' -> ' . $fechaFin->toDateString(),
+                'total_ventas' => $totalVentas,
+                'producto_mas_vendido' => $estadisticas['producto_mas_vendido'],
+                'clientes_frecuentes' => $estadisticas['clientes_frecuentes']
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error al generar el reporte por rango de fechas', 'message' => $e->getMessage()], 500);
+        }
     }
 
-    /*  public function ventasPorDia(Request $request)
+    // 🔹 Nuevo: Ventas por día (detallado)
+    public function ventasPorDia(Request $request)
     {
         try {
             $fecha = $request->input('fecha', Carbon::now()->toDateString());
@@ -174,7 +189,7 @@ class CajaController extends Controller
 
             return response()->json([
                 'fecha' => $fecha,
-                'total_ventas' => floatval($ventas->total_ventas), // ✅ Convertimos a número
+                'total_ventas' => floatval($ventas->total_ventas),
                 'cantidad_pedidos' => intval($ventas->cantidad_pedidos),
             ]);
         } catch (\Exception $e) {
@@ -184,7 +199,7 @@ class CajaController extends Controller
         }
     }
 
-
+    // 🔹 Nuevo: Frecuencia de Clientes
     public function frecuenciaClientes()
     {
         try {
@@ -203,6 +218,7 @@ class CajaController extends Controller
         }
     }
 
+    // 🔹 Nuevo: Productos Más Vendidos
     public function productosMasVendidos(Request $request)
     {
         try {
@@ -225,6 +241,7 @@ class CajaController extends Controller
         }
     }
 
+    // 🔹 Nuevo: Reporte de Ventas General
     public function reporteVentas(Request $request)
     {
         try {
@@ -265,11 +282,10 @@ class CajaController extends Controller
     }
 
 
-
     public function create() {}
     public function store(Request $request) {}
     public function show(string $id) {}
     public function edit(string $id) {}
     public function update(Request $request, string $id) {}
-    public function destroy(string $id) {} */
+    public function destroy(string $id) {}
 }

@@ -36,8 +36,15 @@ Route::patch('mesas/{mesa}/toggle-status', [MesaController::class, 'toggleStatus
 Route::get('reportes', [CajaController::class, 'index'])->name('admin.reportes.index');
 Route::get('reportes/diario', [CajaController::class, 'reporteDiario']);
 Route::get('reportes/semanal', [CajaController::class, 'reporteSemanal']);
-Route::get('reportes/mensual', [CajaController::class, 'reporteMensual']);
+Route::get('reportes/mensual', [CajaController::class, 'reporteMensual']); 
 Route::get('reportes/rango', [CajaController::class, 'reportePorRango']);
+
+// Nuevas rutas para los reportes detallados
+Route::get('reportes/ventas-por-dia', [CajaController::class, 'ventasPorDia'])->name('admin.reportes.ventasPorDia');
+Route::get('reportes/frecuencia-clientes', [CajaController::class, 'frecuenciaClientes'])->name('admin.reportes.frecuenciaClientes');
+Route::get('reportes/productos-mas-vendidos', [CajaController::class, 'productosMasVendidos'])->name('admin.reportes.productosMasVendidos');
+Route::get('reportes/reporte-ventas', [CajaController::class, 'reporteVentas'])->name('admin.reportes.reporteVentas');
+
 
 
 Route::resource('nuevopedidoadmin', CreandoNuevosPedidosController::class)->names('admin.nuevospedidosadmin');

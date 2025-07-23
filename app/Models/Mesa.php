@@ -14,7 +14,7 @@ class Mesa extends Model
 
     protected $table = 'mesas';
 
-    protected $fillable = ['codigo_qr', 'numero_mesa', 'estado', 'uuid'];
+    protected $fillable = ['codigo_qr', 'numero_mesa', 'estado', 'uuid', 'status'];
 
     public function pedidos()
     {

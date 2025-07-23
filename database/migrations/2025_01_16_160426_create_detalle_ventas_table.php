@@ -19,6 +19,7 @@ return new class extends Migration
             $table->integer('cantidad');
             $table->decimal('precio_unitario', 10, 2);
             $table->decimal('precio_total', 10, 2);
+            $table->text('descripcion')->nullable();
             $table->timestamps();
         });
     }
