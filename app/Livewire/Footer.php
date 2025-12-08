@@ -7,6 +7,7 @@ use App\Models\Empresa;
 use App\Models\MenuBar;
 use App\Models\Pagina;
 use Livewire\Component;
+use Illuminate\Support\Facades\Cache;
 
 class Footer extends Component
 {
@@ -19,9 +20,17 @@ class Footer extends Component
 
     public function render()
     {
-        $empresa = Empresa::get();
-        $paginas = Pagina::where('status', 2)->get();
-        $categoria = Categoria::where('status', 1)->orderBy('id', 'desc')->get();
+        $empresa = Cache::remember('footer_empresa_data', 60, function () {
+            return Empresa::get();
+        });
+
+        $paginas = Cache::remember('footer_paginas_data', 60, function () {
+            return Pagina::where('status', 2)->get();
+        });
+
+        $categoria = Cache::remember('footer_categoria_data', 60, function () {
+            return Categoria::where('status', 1)->orderBy('id', 'desc')->get();
+        });
 
         return view('livewire.footer', compact('empresa', 'paginas', 'categoria'));
     }

@@ -37,7 +37,7 @@ class CreandoNuevosPedidosController extends Controller
 
     public function create()
     {
-        $productosventa = Producto::whereHas('categoria', function ($query) {
+        $productosventa = Producto::with('precios', 'image')->whereHas('categoria', function ($query) {
             $query->where('status', 1);
         })->where('status', 1)->get(); // Solo productos activos
         $categoriasventa = Categoria::where('status', 1)->get();
@@ -167,7 +167,7 @@ class CreandoNuevosPedidosController extends Controller
         if (!$pedido) {
             abort(404, 'Pedido no encontrado');
         }
-        $productosventa = Producto::whereHas('categoria', function ($query) {
+        $productosventa = Producto::with('precios', 'image')->whereHas('categoria', function ($query) {
             $query->where('status', 1);
         })->where('status', 1)->get(); // Solo productos activos
 

@@ -15,7 +15,7 @@ class CategoriaController extends Controller
 
     public function index(Request $request)
     {
-        $query = Categoria::query();
+        $query = Categoria::with('image');
         if ($request->has('search')) {
             $search = $request->search;
             $query->where('nombre_categoria', 'like', "%$search%");
