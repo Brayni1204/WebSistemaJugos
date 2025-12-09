@@ -2,12 +2,8 @@
 
 @section('title', 'Empresa - Editar')
 
-@section('content_header')
-    <h1 class="text-center">Editar Empresa</h1>
-@stop
-
 @section('content')
-    <div class="container">
+    <div class="container-fluid">
         <div class="card shadow-lg">
             <div class="card-body">
                 <form action="{{ route('admin.empresa.update', $empresa->id) }}" method="POST" enctype="multipart/form-data">
@@ -21,12 +17,16 @@
                     <div class="row">
                         <div class="col-md-6">
                             <label for="mision" class="form-label">Misión</label>
-                            <textarea id="mision" style="height: 180px;" name="mision" class="form-control" rows="3" required>{{ $empresa->mision }}</textarea>
+                            <textarea id="mision" style="height: 140px;" name="mision" class="form-control" rows="3" required>{{ $empresa->mision }}</textarea>
                         </div>
                         <div class="col-md-6">
                             <label for="vision" class="form-label">Visión</label>
-                            <textarea id="vision" style="height: 180px;" name="vision" class="form-control" rows="3" required>{{ $empresa->vision }}</textarea>
+                            <textarea id="vision" style="height: 140px;" name="vision" class="form-control" rows="3" required>{{ $empresa->vision }}</textarea>
                         </div>
+                    </div>
+                    <div class="mb-3 mt-3">
+                        <label for="descripcion" class="form-label">Descripción</label>
+                        <textarea id="descripcion" style="height: 70px;" name="descripcion" class="form-control" rows="5" required>{{ $empresa->descripcion }}</textarea>
                     </div>
                     <div class="row mt-3">
                         <div class="col-md-6">
@@ -71,40 +71,51 @@
                     </div>
                     <div class="row mt-3">
                         <div class="col-md-6">
-                            <label for="favicon" class="form-label">Favicon</label>
-                            <input type="file" name="favicon" id="favicon" class="form-control" accept="image/*"
-                                onchange="previewImage(event, 'faviconPreview')">
-                            <div class="text-center mt-2">
-                                <img id="faviconPreview" src="{{ $empresa->favicon_url }}"
-                                    class="img-thumbnail" width="150">
+                            <label class="form-label">Favicon</label>
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <input type="file" name="favicon" id="favicon" class="form-control"
+                                        accept="image/*" onchange="previewImage(event, 'faviconPreview')">
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="text-center">
+                                        <img id="faviconPreview"
+                                            src="{{ $empresa->favicon_url ?: asset('storage/default.png') }}"
+                                            class="img-thumbnail" width="100">
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <label for="image" class="form-label">Imagen Relacionada</label>
-                            <input type="file" name="image" id="image" class="form-control" accept="image/*"
-                                onchange="previewImage(event, 'imagePreview')">
-                            <div class="text-center mt-2">
-                                @if ($empresa->image_m)
-                                    <img id="imagePreview" src="{{ $empresa->image_m->url }}"
-                                        class="img-thumbnail" width="150">
-                                @else
-                                    <img id="imagePreview" src="{{ asset('storage/default.png') }}"
-                                        class="img-thumbnail" width="150">
-                                @endif
+                            <label class="form-label">Imagen Relacionada</label>
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <input type="file" name="image" id="image" class="form-control"
+                                        accept="image/*" onchange="previewImage(event, 'imagePreview')">
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="text-center">
+                                        @if ($empresa->image_m)
+                                            <img id="imagePreview" src="{{ $empresa->image_m->url }}"
+                                                class="img-thumbnail" width="100">
+                                        @else
+                                            <img id="imagePreview" src="{{ asset('storage/default.png') }}"
+                                                class="img-thumbnail" width="150">
+                                        @endif
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="d-flex justify-content-center mt-4" style="width: 100%">
+                    <div class="d-flex justify-content-center mt-2">
 
-                        <button type="submit" style="width: 50%" class="btn btn-primary px-4 py-2">💾 Guardar
+                        <button type="submit" class="btn btn-primary px-4 py-2">💾 Guardar
                             Cambios</button>
-                        <a href="{{ route('admin.empresa.index') }}" style="width: 50%" class="btn px-4 py-2 ml-3">🔙
-                            Cancelar</a>
                     </div>
                     <div class="floating-btn-container">
-                        <button type="submit" title="Actualizar información" style="" class="btn btn-primary"><i
+                        <button type="submit" title="Actualizar información" class="btn btn-primary"><i
                                 class="fas fa-edit"></i></button>
-                        <a href="{{ route('admin.empresa.index') }}" class="floating-btn back-btn" title="Regresar">
+                        <a href="{{ route('admin.home') }}" class="floating-btn back-btn" title="Regresar">
                             <i class="fas fa-arrow-left"></i>
                         </a>
                     </div>

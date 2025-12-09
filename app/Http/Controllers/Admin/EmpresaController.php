@@ -8,15 +8,23 @@ use Illuminate\Http\Request;
 use App\Http\Traits\ImageUploadTrait;
 use Illuminate\Support\Facades\Storage;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
-
+ 
 class EmpresaController extends Controller
 {
     use ImageUploadTrait;
 
     public function index()
     {
-        $empresa = Empresa::get();
-        return view('admin.empresa.index', compact('empresa'));
+        $empresa = Empresa::first();
+
+        if ($empresa) {
+            return redirect()->route('admin.empresa.edit', ['empresa' => $empresa->id]);
+        }
+
+        // Optional: Handle case where no company exists.
+        // This redirects to the admin home with a warning.
+        // Depending on application logic, you might want to redirect to a 'create' page instead.
+        return redirect()->route('admin.home')->with('warning', 'No se ha encontrado ninguna empresa. Por favor, cree una.');
     }
     public function create() {}
     public function store(Request $request) {}
@@ -32,6 +40,7 @@ class EmpresaController extends Controller
             'nombre' => 'required|string|max:255|unique:empresas,nombre,' . $empresa->id,
             'mision' => 'required',
             'vision' => 'required',
+            'descripcion' => 'required',
             'mapa_url' => 'required|string|max:500',
             'departamento' => 'required',
             'provincia' => 'required',
@@ -47,6 +56,7 @@ class EmpresaController extends Controller
             'nombre',
             'mision',
             'vision',
+            'descripcion',
             'mapa_url',
             'departamento',
             'provincia',
