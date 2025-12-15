@@ -8,12 +8,6 @@ services:
     container_name: WebSistemaJugos_app
     restart: unless-stopped
     working_dir: /var/www/
-    deploy:
-      resources:
-        limits:
-          memory: 512m
-    volumes:
-      - app-code:/var/www # Use a named volume for the application code
     networks:
       - app-network
 
@@ -84,6 +78,4 @@ networks:
 
 volumes:
   db-data:
-    driver: local
-  app-code: # The shared volume for application code
     driver: local
