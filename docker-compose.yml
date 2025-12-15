@@ -8,6 +8,10 @@ services:
     container_name: WebSistemaJugos_app
     restart: unless-stopped
     working_dir: /var/www/
+    deploy:
+      resources:
+        limits:
+          memory: 512m
     volumes:
       - app-code:/var/www # Use a named volume for the application code
     networks:
@@ -18,6 +22,10 @@ services:
     build:
       context: ./docker/nginx
       dockerfile: Dockerfile
+    deploy:
+      resources:
+        limits:
+          memory: 128m
     container_name: WebSistemaJugos_nginx
     restart: unless-stopped
     ports:
@@ -32,6 +40,10 @@ services:
   #---# MySQL #---#
   db:
     image: mysql:8.0
+    deploy:
+      resources:
+        limits:
+          memory: 1g
     container_name: WebSistemaJugos_db
     restart: unless-stopped
     ports:
@@ -49,6 +61,10 @@ services:
   #---# Pusher (Soketi) #---#
   pusher:
     image: 'quay.io/soketi/soketi:latest-16-alpine'
+    deploy:
+      resources:
+        limits:
+          memory: 256m
     container_name: WebSistemaJugos_pusher
     restart: unless-stopped
     ports:
