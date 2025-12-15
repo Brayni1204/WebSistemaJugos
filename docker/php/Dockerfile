@@ -49,14 +49,14 @@ COPY --chown=www-data:www-data package.json package-lock.json ./
 
 # Instalar dependencias (como usuario www-data para permisos correctos)
 USER ${USER}
-RUN composer install --no-scripts --no-autoloader
+RUN COMPOSER_MEMORY_LIMIT=-1 composer install --no-scripts --no-autoloader
 RUN npm install
 
 # Copiar el resto de la aplicación y establecer permisos
 COPY --chown=www-data:www-data . .
 
 # Terminar la instalación de composer, construir assets y optimizar
-RUN composer install --optimize-autoloader --no-dev
+RUN COMPOSER_MEMORY_LIMIT=-1 composer install --optimize-autoloader --no-dev
 RUN npm run build
 RUN php artisan config:cache
 RUN php artisan route:cache
