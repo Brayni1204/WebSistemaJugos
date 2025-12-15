@@ -65,7 +65,7 @@ RUN npm run build
 
 # Cambiar de nuevo a root para cambiar permisos finales
 USER root
-COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY docker/php/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 ENTRYPOINT ["entrypoint.sh"]
 
