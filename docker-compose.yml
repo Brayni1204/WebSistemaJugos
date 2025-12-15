@@ -24,8 +24,6 @@ services:
     restart: unless-stopped
     ports:
       - "6080:80"
-    volumes:
-      - app-code:/var/www:ro # Mount the same code volume, read-only
     depends_on:
       - app
     networks:
