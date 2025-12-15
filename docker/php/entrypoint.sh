@@ -2,7 +2,11 @@
 set -e
 
 # Solo ajustamos permisos en carpetas criticas para escritura
-chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
+chown -R www-data:www-data /var/www
+
+# Dar permisos de escritura a todos para depuración extrema de permisos
+# ¡ADVERTENCIA: NO USAR EN PRODUCCIÓN! Solo para depuración.
+chmod -R 777 /var/www/storage /var/www/bootstrap/cache/storage /var/www/bootstrap/cache
 
 # Aumenta el tiempo de espera de Composer para procesos (ej. extracción de archivos)
 export COMPOSER_PROCESS_TIMEOUT=600
