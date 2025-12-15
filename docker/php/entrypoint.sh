@@ -1,9 +1,8 @@
 #!/bin/sh
 set -e
 
-# Establece www-data como propietario de todos los archivos en /var/www
-# Esto soluciona los problemas de permisos causados por los volúmenes de Docker.
-chown -R www-data:www-data /var/www
+# Solo ajustamos permisos en carpetas criticas para escritura
+chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 
 # Aumenta el tiempo de espera de Composer para procesos (ej. extracción de archivos)
 export COMPOSER_PROCESS_TIMEOUT=600
