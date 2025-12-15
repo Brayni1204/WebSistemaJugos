@@ -634,7 +634,7 @@ CREATE TABLE `pagos` (
   `pedido_id` bigint(20) unsigned NOT NULL,
   `total_pago` decimal(10,2) NOT NULL,
   `monto_recibido` decimal(10,2) NOT NULL,
-  `vuelto` decimal(10,2) GENERATED ALWAYS AS (`monto_recibido` - `total_pago`) STORED,
+  `vuelto` decimal(10,2) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
