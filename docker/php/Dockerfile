@@ -60,7 +60,7 @@ RUN npm install
 COPY --chown=www-data:www-data . .
 
 # Terminar la instalación de composer, construir assets y optimizar
-RUN COMPOSER_MEMORY_LIMIT=-1 composer install --optimize-autoloader --no-dev
+RUN COMPOSER_MEMORY_LIMIT=-1 composer install --optimize-autoloader --no-dev --no-scripts
 RUN npm run build
 RUN php artisan config:cache
 RUN php artisan route:cache
