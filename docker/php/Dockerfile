@@ -53,14 +53,14 @@ RUN chown -R ${USER}:${USER} /var/www
 
 # Instalar dependencias (como usuario www-data para permisos correctos)
 USER ${USER}
-RUN COMPOSER_MEMORY_LIMIT=-1 composer install --no-scripts --no-autoloader
+RUN COMPOSER_MEMORY_LIMIT=-1 COMPOSER_PROCESS_TIMEOUT=600 composer install --no-scripts --no-autoloader
 RUN npm install
 
 # Copiar el resto de la aplicación y establecer permisos
 COPY --chown=www-data:www-data . .
 
 # Terminar la instalación de composer, construir assets y optimizar
-RUN COMPOSER_MEMORY_LIMIT=-1 composer install --optimize-autoloader --no-dev --no-scripts
+RUN COMPOSER_MEMORY_LIMIT=-1 COMPOSER_PROCESS_TIMEOUT=600 composer install --optimize-autoloader --no-dev --no-scripts
 RUN npm run build
 
 # Cambiar de nuevo a root para cambiar permisos finales
