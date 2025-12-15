@@ -34,7 +34,8 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
 # Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Crear un usuario del sistema para ejecutar los comandos
+# Crear o modificar el usuario del sistema para ejecutar los comandos
+RUN userdel ${USER} > /dev/null 2>&1 || true
 RUN useradd -G www-data,root -u ${UID} -d /home/${USER} ${USER}
 RUN mkdir -p /home/${USER}/.composer && \
     chown -R ${USER}:${USER} /home/${USER}
