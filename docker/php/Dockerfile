@@ -47,6 +47,10 @@ WORKDIR /var/www
 COPY --chown=www-data:www-data composer.json composer.lock ./
 COPY --chown=www-data:www-data package.json package-lock.json ./
 
+# Cambiar propietario del directorio de trabajo antes de cambiar de usuario
+USER root
+RUN chown -R ${USER}:${USER} /var/www
+
 # Instalar dependencias (como usuario www-data para permisos correctos)
 USER ${USER}
 RUN COMPOSER_MEMORY_LIMIT=-1 composer install --no-scripts --no-autoloader
