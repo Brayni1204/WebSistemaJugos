@@ -65,8 +65,9 @@ RUN npm run build
 
 # Cambiar de nuevo a root para cambiar permisos finales
 USER root
-RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
-RUN chmod -R 775 /var/www/storage /var/www/bootstrap/cache
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+ENTRYPOINT ["entrypoint.sh"]
 
 # Exponer puerto y iniciar FPM
 EXPOSE 9000
