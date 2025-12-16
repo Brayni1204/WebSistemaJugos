@@ -10,7 +10,7 @@ services:
     working_dir: /var/www/
     volumes:
       - .:/var/www
-    command: sh -c "composer install --optimize-autoloader --no-dev && php-fpm"
+    command: sh -c "composer install --optimize-autoloader --no-dev && php artisan key:generate --ansi && php artisan storage:link && chown -R www-data:www-data /var/www && chmod -R 775 /var/www/storage /var/www/bootstrap/cache && php-fpm"
     networks:
       - app-network
 
