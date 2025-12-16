@@ -10,6 +10,7 @@ services:
     working_dir: /var/www/
     volumes:
       - .:/var/www
+    command: sh -c "composer install --optimize-autoloader --no-dev && php-fpm"
     networks:
       - app-network
 
