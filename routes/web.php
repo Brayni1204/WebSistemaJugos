@@ -77,33 +77,45 @@ Route::post('/pedido/realizar', [CarritoController::class, 'realizarPedido'])->n
 
 Route::get('/{pagina}/{subtitulo}', [ParrafoController::class, 'parrafo'])->name('views.parrafo');
 
+use Illuminate\Support\Str;
+
 // En routes/web.php
 Route::get('/build/{path}', function ($path) {
     $filePath = public_path('build/' . $path);
     if (!File::exists($filePath)) {
         abort(404);
     }
-
     $file = File::get($filePath);
-    $type = File::mimeType($filePath);
-
-    $response = Response::make($file, 200);
-    $response->header("Content-Type", $type);
-
-    return $response;
+    $mimeType = match (true) {
+        Str::endsWith($path, '.css') => 'text/css',
+        Str::endsWith($path, '.js') => 'application/javascript',
+        default => File::mimeType($filePath),
+    };
+    return Response::make($file, 200, ['Content-Type' => $mimeType]);
 })->where('path', '.*');
 
+// Route to serve files from public/vendor/livewire
 Route::get('/vendor/livewire/{path}', function ($path) {
     $filePath = public_path('vendor/livewire/' . $path);
     if (!File::exists($filePath)) {
         abort(404);
     }
+    $file = File::get($filePath);
+    $mimeType = match (true) {
+        Str::endsWith($path, '.css') => 'text/css',
+        Str::endsWith($path, '.js') => 'application/javascript',
+        default => File::mimeType($filePath),
+    };
+    return Response::make($file, 200, ['Content-Type' => $mimeType]);
+})->where('path', '.*');
 
+// Route to serve files from storage/app/public
+Route::get('/storage/{path}', function ($path) {
+    $filePath = storage_path('app/public/' . $path);
+    if (!File::exists($filePath)) {
+        abort(404);
+    }
     $file = File::get($filePath);
     $type = File::mimeType($filePath);
-
-    $response = Response::make($file, 200);
-    $response->header("Content-Type", $type);
-
-    return $response;
+    return Response::make($file, 200, ['Content-Type' => $type]);
 })->where('path', '.*');
