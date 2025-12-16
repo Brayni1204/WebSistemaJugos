@@ -43,6 +43,10 @@ RUN mkdir -p /home/${USER}/.composer && \
 # Establecer el directorio de trabajo
 WORKDIR /var/www
 
+# Añadir /var/www a la lista de directorios seguros de git globalmente
+# Esto es necesario debido a problemas de propiedad en volúmenes montados de Docker en Windows/WSL2
+RUN git config --global --add safe.directory /var/www
+
 # Copiar archivos de dependencias y establecer permisos
 COPY --chown=www-data:www-data composer.json composer.lock ./
 COPY --chown=www-data:www-data package.json package-lock.json ./
