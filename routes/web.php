@@ -94,18 +94,23 @@ Route::get('/build/{path}', function ($path) {
     return Response::make($file, 200, ['Content-Type' => $mimeType]);
 })->where('path', '.*');
 
-// Route to serve files from public/vendor/livewire
-Route::get('/vendor/livewire/{path}', function ($path) {
-    $filePath = public_path('vendor/livewire/' . $path);
+// Route to serve all files from the public/vendor directory
+Route::get('/vendor/{path}', function ($path) {
+    $filePath = public_path('vendor/' . $path);
     if (!File::exists($filePath)) {
         abort(404);
     }
+
     $file = File::get($filePath);
     $mimeType = match (true) {
         Str::endsWith($path, '.css') => 'text/css',
         Str::endsWith($path, '.js') => 'application/javascript',
+        Str::endsWith($path, '.woff') => 'font/woff',
+        Str::endsWith($path, '.woff2') => 'font/woff2',
+        Str::endsWith($path, '.ttf') => 'font/ttf',
         default => File::mimeType($filePath),
     };
+
     return Response::make($file, 200, ['Content-Type' => $mimeType]);
 })->where('path', '.*');
 
