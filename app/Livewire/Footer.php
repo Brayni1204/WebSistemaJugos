@@ -21,7 +21,7 @@ class Footer extends Component
     public function render()
     {
         $empresa = Cache::remember('footer_empresa_data', 60, function () {
-            return Empresa::get();
+            return Empresa::first();
         });
 
         $paginas = Cache::remember('footer_paginas_data', 60, function () {

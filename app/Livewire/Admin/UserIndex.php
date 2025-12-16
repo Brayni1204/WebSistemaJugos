@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\admin;
+namespace App\Livewire\Admin;
 
 use App\Models\User;
 use Livewire\Component;
@@ -53,7 +53,7 @@ class UserIndex extends Component
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
                     $q->where('name', 'LIKE', '%' . $this->search . '%')
-                      ->orWhere('email', 'LIKE', '%' . $this->search . '%');
+                        ->orWhere('email', 'LIKE', '%' . $this->search . '%');
                 });
             });
 

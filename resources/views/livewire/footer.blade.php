@@ -3,9 +3,9 @@
         <div>
             <a href="/" class="flex items-center">
                 <!-- Imagen del menú -->
-                @if ($empresa->isNotEmpty())
+                @if ($empresa)
                     @php
-                        $ultimaImagen = $empresa->first()->image_m()->latest()->first();
+                        $ultimaImagen = $empresa->image_m()->latest()->first();
                     @endphp
                     @if ($ultimaImagen)
                         <img class="h-12 w-auto" src="{{ $ultimaImagen->url }}" alt="Logo">
@@ -64,27 +64,24 @@
 
     </div>
     <div class="flex md:gap-10 justify-center p-2 space-x-8 text-4xl">
-        @php
-            $info = $empresa->first(); // Tomar la primera empresa registrada
-        @endphp
         <a href="https://www.facebook.com/profile.php?id=61574863073968" class="social-icon text-blue-600"><i
                 class="fab fa-facebook"></i></a>
         <a href="https://www.instagram.com/merakifruit3?igsh=MXRpMTdkOGQ0MTI5OQ==" class="social-icon text-pink-500"><i
                 class="fab fa-instagram"></i></a>
         <a href="https://www.tiktok.com/@merakifruit3?is_from_webapp=1&sender_device=pc"
             class="social-icon text-black"><i class="fab fa-tiktok"></i></a>
-        <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $info->telefono) }}"
+        <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $empresa?->telefono ?? '') }}"
             class="social-icon text-green-500"><i class="fab fa-whatsapp"></i></a>
     </div>
 
 
 
     <!-- Créditos -->
-    @foreach ($empresa as $item)
+    @if ($empresa)
         <div class="pt-2 text-center text-gray-400 text-sm">
             &copy; {{ date('Y') }} - Todos los derechos reservados <a href=""
-                class="text-blue-400 hover:underline">{{ $item->nombre }}</a>
+                class="text-blue-400 hover:underline">{{ $empresa->nombre }}</a>
         </div>
-    @endforeach
+    @endif
 
 </footer>
