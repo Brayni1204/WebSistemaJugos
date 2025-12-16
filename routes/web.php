@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Route;
 
 
 use App\Http\Controllers\PagoMercadoController;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Response;
 
 Route::get('/pedido-detalle-actualizado/{pedido_id}', [NuevosPedidosController::class, 'obtenerDetallesParaCliente'])->name('pedido.detalles.cliente');
 
@@ -76,3 +78,32 @@ Route::post('/pedido/realizar', [CarritoController::class, 'realizarPedido'])->n
 Route::get('/{pagina}/{subtitulo}', [ParrafoController::class, 'parrafo'])->name('views.parrafo');
 
 // En routes/web.php
+Route::get('/build/{path}', function ($path) {
+    $filePath = public_path('build/' . $path);
+    if (!File::exists($filePath)) {
+        abort(404);
+    }
+
+    $file = File::get($filePath);
+    $type = File::mimeType($filePath);
+
+    $response = Response::make($file, 200);
+    $response->header("Content-Type", $type);
+
+    return $response;
+})->where('path', '.*');
+
+Route::get('/vendor/livewire/{path}', function ($path) {
+    $filePath = public_path('vendor/livewire/' . $path);
+    if (!File::exists($filePath)) {
+        abort(404);
+    }
+
+    $file = File::get($filePath);
+    $type = File::mimeType($filePath);
+
+    $response = Response::make($file, 200);
+    $response->header("Content-Type", $type);
+
+    return $response;
+})->where('path', '.*');
