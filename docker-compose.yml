@@ -8,11 +8,6 @@ services:
     container_name: WebSistemaJugos_app
     restart: unless-stopped
     working_dir: /var/www/
-    # --- AQUÍ ESTÁ EL CAMBIO IMPORTANTE ---
-    volumes:
-      - .:/var/www
-    # --------------------------------------
-    command: sh -c "composer install --optimize-autoloader --no-dev && php artisan key:generate --ansi && php artisan storage:link && chown -R www-data:www-data /var/www && chmod -R 775 /var/www/storage /var/www/bootstrap/cache && php-fpm"
     networks:
       - app-network
 
