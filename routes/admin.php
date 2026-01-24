@@ -1,20 +1,20 @@
 <?php
 
-use App\Http\Controllers\admin\CajaController;
+use App\Http\Controllers\Admin\CajaController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\admin\CategoriaController;
-use App\Http\Controllers\admin\CreandoNuevosPedidosController;
-use App\Http\Controllers\admin\CreandoNuevosPedidosDetalleController;
-use App\Http\Controllers\admin\EmpresaController;
-use App\Http\Controllers\admin\HomeController;
-use App\Http\Controllers\admin\MesaController;
-use App\Http\Controllers\admin\PaginaController;
-use App\Http\Controllers\admin\ParrafoController;
-use App\Http\Controllers\admin\ProductosController;
-use App\Http\Controllers\admin\SubtituloController;
-use App\Http\Controllers\admin\UserController;
-use App\Http\Controllers\admin\VentaController;
-use App\Http\Controllers\admin\RoleController;
+use App\Http\Controllers\Admin\CategoriaController;
+use App\Http\Controllers\Admin\CreandoNuevosPedidosController;
+use App\Http\Controllers\Admin\CreandoNuevosPedidosDetalleController;
+use App\Http\Controllers\Admin\EmpresaController;
+use App\Http\Controllers\Admin\HomeController;
+use App\Http\Controllers\Admin\MesaController;
+use App\Http\Controllers\Admin\PaginaController;
+use App\Http\Controllers\Admin\ParrafoController;
+use App\Http\Controllers\Admin\ProductosController;
+use App\Http\Controllers\Admin\SubtituloController;
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\VentaController;
+use App\Http\Controllers\Admin\RoleController;
 
 Route::get('', [HomeController::class, 'index'])->middleware('can:admin.home')->name('admin.home');
 
@@ -67,7 +67,7 @@ Route::resource('nuevodetallepedido', CreandoNuevosPedidosDetalleController::cla
 Route::get('nuevodetallepedido/{pedidoId}/detalles', [CreandoNuevosPedidosDetalleController::class, 'obtenerDetallesPedido'])->name('admin.nuevospedidosdetalleadmin.detalles');
 
 // ... (dentro de tu grupo de rutas de administrador)
-Route::get('/pedidos/actualizar-tabla', [App\Http\Controllers\admin\CreandoNuevosPedidosController::class, 'actualizarTabla'])->name('admin.pedidos.actualizarTabla');
+Route::get('/pedidos/actualizar-tabla', [App\Http\Controllers\Admin\CreandoNuevosPedidosController::class, 'actualizarTabla'])->name('admin.pedidos.actualizarTabla');
 
 /* Route::get('pedidos/{pedido}/comprobante', [CreandoNuevosPedidosController::class, 'generarComprobante'])->name('admin.pedidos.generarComprobante'); */
 Route::post('pedidos/{pedido}/completar', [CreandoNuevosPedidosController::class, 'completarPedido'])->name('admin.pedidos.completar');
@@ -77,9 +77,9 @@ Route::post('pedidos/{pedido}/cancelar', [CreandoNuevosPedidosController::class,
 Route::resource('ventas', VentaController::class)->middleware('can:admin.ventas.index')->names('admin.ventas');
 
 // Rutas para el módulo de Gastos
-use App\Http\Controllers\admin\GastoController;
-use App\Http\Controllers\admin\CategoriaGastoController;
-use App\Http\Controllers\admin\ProveedorController;
+use App\Http\Controllers\Admin\GastoController;
+use App\Http\Controllers\Admin\CategoriaGastoController;
+use App\Http\Controllers\Admin\ProveedorController;
 
 Route::resource('gastos', GastoController::class)->names('admin.gastos');
 Route::resource('categorias-gastos', CategoriaGastoController::class)->names('admin.categorias-gastos');
