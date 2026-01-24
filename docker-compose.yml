@@ -48,7 +48,6 @@ services:
     volumes:
       - db-data:/var/lib/mysql
       - ./merakifruit.sql:/docker-entrypoint-initdb.d/merakifruit.sql
-      - ./merakifruit.sql:/docker-entrypoint-initdb.d/merakifruit.sql
     networks:
       - app-network
 
