@@ -54,7 +54,7 @@ Route::get('/nosotros', [NosotrosController::class, 'index'])->name('views.nosot
 
 
 Route::get('/categoria/{id}/productos', [ProductosController::class, 'index'])->name('views.categorias');
-Route::get('/{pagina}', [PaginaController::class, 'pagina'])->name('views.pagina');
+Route::get('/{pagina}', [PaginaController::class, 'pagina'])->name('views.pagina')->where('pagina', '^(?!admin|login|register|logout).*$');
 
 
 
@@ -75,7 +75,7 @@ Route::post('/carrito/eliminar', [CarritoController::class, 'eliminarDelCarrito'
 Route::post('/carrito/vaciar', [CarritoController::class, 'vaciarCarrito'])->name('pagecarrito.vaciar');
 Route::post('/pedido/realizar', [CarritoController::class, 'realizarPedido'])->name('pedido.realizar');
 
-Route::get('/{pagina}/{subtitulo}', [ParrafoController::class, 'parrafo'])->name('views.parrafo');
+Route::get('/{pagina}/{subtitulo}', [ParrafoController::class, 'parrafo'])->name('views.parrafo')->where('pagina', '^(?!admin|login|register|logout).*$');
 
 use Illuminate\Support\Str;
 

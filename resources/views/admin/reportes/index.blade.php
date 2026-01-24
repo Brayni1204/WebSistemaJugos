@@ -113,42 +113,68 @@
         </div>
     </div>
 
-    {{-- Fila de Resumen (Small Boxes) --}}
+    {{-- Fila de Resumen Financiero --}}
     <div class="row">
-        <div class="col-lg-3 col-6">
+        <div class="col-lg-4 col-6">
             <div class="small-box custom-box custom-box-1">
                 <div class="inner">
                     <h3 id="totalVentas">S/ 0.00</h3>
-                    <p>Ventas</p>
+                    <p>Total Ventas</p>
                 </div>
                 <div class="icon">
                     <i class="fas fa-cash-register"></i>
                 </div>
             </div>
         </div>
-        <div class="col-lg-3 col-6">
+        <div class="col-lg-4 col-6">
+            <div class="small-box custom-box custom-box-2" style="background-color: #dc3545 !important;"> {{-- Red for expenses --}}
+                <div class="inner">
+                    <h3 id="totalGastos">S/ 0.00</h3>
+                    <p>Total Gastos</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-6">
+            <div class="small-box custom-box custom-box-3" style="background-color: #28a745 !important;"> {{-- Green for profit --}}
+                <div class="inner">
+                    <h3 id="gananciaNeta">S/ 0.00</h3>
+                    <p>Ganancia Neta</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Fila de Resumen Operativo --}}
+    <div class="row">
+        <div class="col-lg-4 col-6">
             <div class="small-box custom-box custom-box-4">
                 <div class="inner">
                     <h3 id="ventasDelDia">S/ 0.00</h3>
-                    <p>Ventas del Día</p>
+                    <p>Ventas del Día (Hoy)</p>
                 </div>
                 <div class="icon">
                     <i class="fas fa-calendar-day"></i>
                 </div>
             </div>
         </div>
-        <div class="col-lg-3 col-6">
+        <div class="col-lg-4 col-6">
             <div class="small-box custom-box custom-box-2">
                 <div class="inner">
                     <h3 id="cantidadPedidos">0</h3>
-                    <p>Pedidos</p>
+                    <p>Total Pedidos</p>
                 </div>
                 <div class="icon">
                     <i class="fas fa-receipt"></i>
                 </div>
             </div>
         </div>
-        <div class="col-lg-3 col-6">
+        <div class="col-lg-4 col-6">
             <div class="small-box custom-box custom-box-3">
                 <div class="inner">
                     <h3 id="productoEstrella"
@@ -355,6 +381,8 @@
                     .then(data => {
                         // 1. Actualizar Summary Boxes
                         $('#totalVentas').text(`S/ ${parseFloat(data.summary.total_ventas || 0).toFixed(2)}`);
+                        $('#totalGastos').text(`S/ ${parseFloat(data.summary.total_gastos || 0).toFixed(2)}`);
+                        $('#gananciaNeta').text(`S/ ${parseFloat(data.summary.ganancia_neta || 0).toFixed(2)}`);
                         $('#cantidadPedidos').text(data.summary.cantidad_pedidos || 0);
                         $('#productoEstrella').text(data.summary.producto_estrella || 'N/A');
 

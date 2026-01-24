@@ -75,3 +75,12 @@ Route::get('pedidos/{pedido}/ticket-cocina', [CreandoNuevosPedidosController::cl
 Route::post('pedidos/{pedido}/cancelar', [CreandoNuevosPedidosController::class, 'cancelarPedido'])->middleware('auth')->name('admin.pedidos.cancelar');
 
 Route::resource('ventas', VentaController::class)->middleware('can:admin.ventas.index')->names('admin.ventas');
+
+// Rutas para el módulo de Gastos
+use App\Http\Controllers\admin\GastoController;
+use App\Http\Controllers\admin\CategoriaGastoController;
+use App\Http\Controllers\admin\ProveedorController;
+
+Route::resource('gastos', GastoController::class)->names('admin.gastos');
+Route::resource('categorias-gastos', CategoriaGastoController::class)->names('admin.categorias-gastos');
+Route::resource('proveedores', ProveedorController::class)->names('admin.proveedores');

@@ -91,6 +91,25 @@ class RolSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'admin.producto.create'])->syncRoles([$AdminRol, $VendedorRol]);
         Permission::firstOrCreate(['name' => 'admin.producto.edit'])->syncRoles([$AdminRol, $VendedorRol]);
         Permission::firstOrCreate(['name' => 'admin.producto.destroy'])->syncRoles([$AdminRol, $VendedorRol]);
+
+        // Gastos
+        Permission::firstOrCreate(['name' => 'admin.gastos.index'])->syncRoles([$AdminRol]);
+        Permission::firstOrCreate(['name' => 'admin.gastos.create'])->syncRoles([$AdminRol]);
+        Permission::firstOrCreate(['name' => 'admin.gastos.edit'])->syncRoles([$AdminRol]);
+        Permission::firstOrCreate(['name' => 'admin.gastos.destroy'])->syncRoles([$AdminRol]);
+        Permission::firstOrCreate(['name' => 'admin.gastos.show'])->syncRoles([$AdminRol]);
+
+        // Proveedores
+        Permission::firstOrCreate(['name' => 'admin.proveedores.index'])->syncRoles([$AdminRol]);
+        Permission::firstOrCreate(['name' => 'admin.proveedores.create'])->syncRoles([$AdminRol]);
+        Permission::firstOrCreate(['name' => 'admin.proveedores.edit'])->syncRoles([$AdminRol]);
+        Permission::firstOrCreate(['name' => 'admin.proveedores.destroy'])->syncRoles([$AdminRol]);
+
+        // Categorias Gastos
+        Permission::firstOrCreate(['name' => 'admin.categorias-gastos.index'])->syncRoles([$AdminRol]);
+        Permission::firstOrCreate(['name' => 'admin.categorias-gastos.create'])->syncRoles([$AdminRol]);
+        Permission::firstOrCreate(['name' => 'admin.categorias-gastos.edit'])->syncRoles([$AdminRol]);
+        Permission::firstOrCreate(['name' => 'admin.categorias-gastos.destroy'])->syncRoles([$AdminRol]);
     }
 }
 

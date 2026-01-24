@@ -9,6 +9,7 @@ use App\Models\Pedido;
 use App\Models\Producto;
 use App\Models\Categoria;
 use App\Models\Venta;
+use App\Models\Gasto;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -75,12 +76,17 @@ class CajaController extends Controller
             $totalVentas = $ventasDelDia->sum('total_pago');
             $cantidadPedidos = $ventasDelDia->count();
 
+            $totalGastos = Gasto::whereDate('fecha_gasto', $fecha)->sum('total');
+            $gananciaNeta = $totalVentas - $totalGastos;
+
             $estadisticas = $this->obtenerEstadisticas($ventasDelDia);
 
 
             return response()->json([
                 'fecha' => $fecha,
                 'total_ventas' => $totalVentas,
+                'total_gastos' => $totalGastos,
+                'ganancia_neta' => $gananciaNeta,
                 'cantidad_pedidos' => $cantidadPedidos,
                 'producto_mas_vendido' => $estadisticas['producto_mas_vendido'],
                 'clientes_frecuentes' => $estadisticas['clientes_frecuentes']
@@ -105,11 +111,16 @@ class CajaController extends Controller
             $ventas = Venta::whereBetween('created_at', [$inicioSemana, $finSemana])->with('detalles')->get();
             $totalVentas = $ventas->sum('total_pago');
 
+            $totalGastos = Gasto::whereBetween('fecha_gasto', [$inicioSemana, $finSemana])->sum('total');
+            $gananciaNeta = $totalVentas - $totalGastos;
+
             $estadisticas = $this->obtenerEstadisticas($ventas);
 
             return response()->json([
                 'rango' => $inicioSemana->toDateString() . ' -> ' . $finSemana->toDateString(),
                 'total_ventas' => $totalVentas,
+                'total_gastos' => $totalGastos,
+                'ganancia_neta' => $gananciaNeta,
                 'producto_mas_vendido' => $estadisticas['producto_mas_vendido'],
                 'clientes_frecuentes' => $estadisticas['clientes_frecuentes']
             ]);
@@ -136,12 +147,19 @@ class CajaController extends Controller
                 ->get();
             $totalVentas = $ventas->sum('total_pago');
 
+            $totalGastos = Gasto::whereYear('fecha_gasto', $anio)
+                ->whereMonth('fecha_gasto', $mes)
+                ->sum('total');
+            $gananciaNeta = $totalVentas - $totalGastos;
+
             $estadisticas = $this->obtenerEstadisticas($ventas);
 
             return response()->json([
                 'mes' => $mes,
                 'anio' => $anio,
                 'total_ventas' => $totalVentas,
+                'total_gastos' => $totalGastos,
+                'ganancia_neta' => $gananciaNeta,
                 'producto_mas_vendido' => $estadisticas['producto_mas_vendido'],
                 'clientes_frecuentes' => $estadisticas['clientes_frecuentes']
             ]);
@@ -167,11 +185,17 @@ class CajaController extends Controller
             $ventas = Venta::whereBetween('created_at', [$fechaInicio, $fechaFin])->with('detalles')->get();
             $totalVentas = $ventas->sum('total_pago');
 
+            // Calcular Gastos y Ganancia
+            $totalGastos = Gasto::whereBetween('fecha_gasto', [$fechaInicio, $fechaFin])->sum('total');
+            $gananciaNeta = $totalVentas - $totalGastos;
+
             $estadisticas = $this->obtenerEstadisticas($ventas);
 
             return response()->json([
                 'rango' => $fechaInicio->toDateString() . ' -> ' . $fechaFin->toDateString(),
                 'total_ventas' => $totalVentas,
+                'total_gastos' => $totalGastos,
+                'ganancia_neta' => $gananciaNeta,
                 'producto_mas_vendido' => $estadisticas['producto_mas_vendido'],
                 'clientes_frecuentes' => $estadisticas['clientes_frecuentes']
             ]);
@@ -331,6 +355,13 @@ class CajaController extends Controller
             $totalVentas = $ventas->sum('total_pago');
             $cantidadPedidos = $ventas->count();
 
+            // Calcular Gastos y Ganancia
+            $fechaInicio = Carbon::parse($request->input('fecha_inicio'))->startOfDay();
+            $fechaFin = Carbon::parse($request->input('fecha_fin'))->endOfDay();
+            
+            $totalGastos = Gasto::whereBetween('fecha_gasto', [$fechaInicio, $fechaFin])->sum('total');
+            $gananciaNeta = $totalVentas - $totalGastos;
+
             // Obtener productos más vendidos (sin límite)
             $productosMasVendidos = DB::table('detalle_ventas')
                 ->join('productos', 'detalle_ventas.producto_id', '=', 'productos.id')
@@ -368,6 +399,8 @@ class CajaController extends Controller
             return response()->json([
                 'summary' => [
                     'total_ventas' => $totalVentas,
+                    'total_gastos' => $totalGastos,
+                    'ganancia_neta' => $gananciaNeta,
                     'cantidad_pedidos' => $cantidadPedidos,
                     'producto_estrella' => $productoEstrella,
                 ],

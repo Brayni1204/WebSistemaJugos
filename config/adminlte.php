@@ -184,6 +184,29 @@ return [
         ],
 
         [
+            'header' => 'COMPRAS / GASTOS',
+            'can'    => 'admin.gastos.index',
+        ],
+        [
+            'text' => 'Gastos',
+            'route' => 'admin.gastos.index',
+            'icon' => 'fas fa-money-bill-wave',
+            'can'   => 'admin.gastos.index',
+        ],
+        [
+            'text' => 'Categorías Gastos',
+            'route' => 'admin.categorias-gastos.index',
+            'icon' => 'fas fa-tags',
+            'can'   => 'admin.categorias-gastos.index',
+        ],
+        [
+            'text' => 'Proveedores',
+            'route' => 'admin.proveedores.index',
+            'icon' => 'fas fa-truck',
+            'can'   => 'admin.proveedores.index',
+        ],
+
+        [
             'text' => 'Reportes',
             'icon' => 'fas fa-chart-line',
             'route' => 'admin.reportes.index',

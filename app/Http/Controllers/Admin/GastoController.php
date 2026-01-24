@@ -73,7 +73,8 @@ class GastoController extends Controller
      */
     public function show(Gasto $gasto)
     {
-        //
+        $gasto->load(['proveedor', 'user', 'detalles.categoria']);
+        return view('admin.gastos.show', compact('gasto'));
     }
 
     /**
@@ -97,6 +98,7 @@ class GastoController extends Controller
      */
     public function destroy(Gasto $gasto)
     {
-        //
+        $gasto->delete();
+        return redirect()->route('admin.gastos.index')->with('success', 'Gasto eliminado con éxito.');
     }
 }
