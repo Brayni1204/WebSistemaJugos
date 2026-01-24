@@ -99,6 +99,12 @@ composer install --optimize-autoloader --no-dev
 # Generate autoload files again to fix PSR-4 warnings
 composer dump-autoload --optimize
 
+# Ensure .env exists
+if [ ! -f .env ]; then
+    echo "Creating .env file from .env.example"
+    cp .env.example .env
+fi
+
 php artisan key:generate --ansi
 php artisan storage:link
 
