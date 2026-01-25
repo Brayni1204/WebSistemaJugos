@@ -105,8 +105,18 @@ if [ ! -f .env ]; then
     cp .env.example .env
 fi
 
-php artisan key:generate --ansi
+php artisan key:generate --force --ansi
 php artisan storage:link
+
+# Run migrations
+echo "Running migrations..."
+php artisan migrate --force
+
+# Clear caches
+echo "Clearing caches..."
+php artisan optimize:clear
+php artisan config:clear
+php artisan cache:clear
 
 # Set permissions (now that storage and bootstrap/cache exist)
 chown -R www-data:www-data /var/www

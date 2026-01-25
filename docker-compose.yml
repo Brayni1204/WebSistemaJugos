@@ -8,6 +8,20 @@ services:
     container_name: WebSistemaJugos_app
     restart: unless-stopped
     working_dir: /var/www/
+    environment:
+      APP_DEBUG: "true"
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      APP_URL: https://merakifruit.techinnovats.com
+    volumes:
+      - public-data:/var/www/public
+      - storage-data:/var/www/storage
+    depends_on:
+      - db
     networks:
       - app-network
 
@@ -24,6 +38,9 @@ services:
     restart: unless-stopped
     ports:
       - "6080:80"
+    volumes:
+      - public-data:/var/www/public
+      - storage-data:/var/www/storage
     depends_on:
       - app
     networks:
@@ -77,4 +94,8 @@ networks:
 
 volumes:
   db-data:
+    driver: local
+  public-data:
+    driver: local
+  storage-data:
     driver: local
