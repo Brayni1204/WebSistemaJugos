@@ -111,7 +111,7 @@ php artisan storage:link
 # Wait for DB service to be ready
 echo "Waiting for Database to be ready..."
 php -r "
-    \$host = getenv('DB_HOST') ?: 'db';
+    \$host = getenv('DB_HOST') ?: '10.60.0.5';
     \$port = getenv('DB_PORT') ?: 3306;
     \$maxTries = 300;
     echo 'Checking connection to ' . \$host . ':' . \$port . '...';
