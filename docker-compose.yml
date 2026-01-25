@@ -23,7 +23,8 @@ services:
     depends_on:
       - db
     networks:
-      - meraki-net
+      meraki-net:
+        ipv4_address: 10.60.0.6
 
   #---# NGINX #---#
   nginx:
