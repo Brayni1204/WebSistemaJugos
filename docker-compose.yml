@@ -11,20 +11,23 @@ services:
     environment:
       APP_DEBUG: "true"
       DB_CONNECTION: mysql
-      DB_HOST: 10.60.0.5
-      DB_PORT: 3306
+      DB_HOST: host.docker.internal
+      DB_PORT: 6306
       DB_DATABASE: ${DB_DATABASE}
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
       APP_URL: https://merakifruit.techinnovats.com
+    ports:
+      - "9000:9000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - public-data:/var/www/public
       - storage-data:/var/www/storage
     depends_on:
       - db
     networks:
-      meraki-net:
-        ipv4_address: 10.60.0.6
+      - meraki-net
 
   #---# NGINX #---#
   nginx:
@@ -39,6 +42,8 @@ services:
     restart: unless-stopped
     ports:
       - "6080:80"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - public-data:/var/www/public
       - storage-data:/var/www/storage
@@ -67,8 +72,7 @@ services:
       - db-data:/var/lib/mysql
       - ./merakifruit.sql:/docker-entrypoint-initdb.d/merakifruit.sql
     networks:
-      meraki-net:
-        ipv4_address: 10.60.0.5
+      - meraki-net
 
   #---# Pusher (Soketi) #---#
   pusher:
@@ -93,9 +97,6 @@ services:
 networks:
   meraki-net:
     driver: bridge
-    ipam:
-      config:
-        - subnet: 10.60.0.0/16
 
 volumes:
   db-data:
