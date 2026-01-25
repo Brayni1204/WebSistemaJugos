@@ -11,7 +11,7 @@ services:
     environment:
       APP_DEBUG: "true"
       DB_CONNECTION: mysql
-      DB_HOST: db
+      DB_HOST: 172.20.0.5
       DB_PORT: 3306
       DB_DATABASE: ${DB_DATABASE}
       DB_USERNAME: ${DB_USERNAME}
@@ -66,7 +66,8 @@ services:
       - db-data:/var/lib/mysql
       - ./merakifruit.sql:/docker-entrypoint-initdb.d/merakifruit.sql
     networks:
-      - app-network
+      app-network:
+        ipv4_address: 172.20.0.5
 
   #---# Pusher (Soketi) #---#
   pusher:
@@ -91,6 +92,9 @@ services:
 networks:
   app-network:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
 
 volumes:
   db-data:

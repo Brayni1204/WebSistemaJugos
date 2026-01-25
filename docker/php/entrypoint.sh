@@ -108,6 +108,33 @@ fi
 php artisan key:generate --force --ansi
 php artisan storage:link
 
+# Wait for DB service to be ready
+echo "Waiting for Database to be ready..."
+php -r "
+    \$host = getenv('DB_HOST') ?: 'db';
+    \$port = getenv('DB_PORT') ?: 3306;
+    \$maxTries = 300;
+    echo 'Checking connection to ' . \$host . ':' . \$port . '...';
+    for (\$i = 0; \$i < \$maxTries; \$i++) {
+        \$conn = @fsockopen(\$host, \$port, \$errno, \$errstr, 2);
+        if (\$conn) {
+            fclose(\$conn);
+            echo ' Database is up and reachable!' . PHP_EOL;
+            exit(0);
+        }
+        echo '.';
+        sleep(1);
+    }
+    echo PHP_EOL . 'Could not connect to database host ' . \$host . ':' . \$port . ' after ' . \$maxTries . ' seconds.' . PHP_EOL;
+    echo 'Last error: ' . \$errstr . ' (' . \$errno . ')' . PHP_EOL;
+    exit(1);
+"
+
+if [ $? -ne 0 ]; then
+  echo "Database connection failed. Exiting."
+  exit 1
+fi
+
 # Run migrations
 echo "Running migrations..."
 php artisan migrate --force
