@@ -11,16 +11,12 @@ services:
     environment:
       APP_DEBUG: "true"
       DB_CONNECTION: mysql
-      DB_HOST: host.docker.internal
-      DB_PORT: 6306
-      DB_DATABASE: ${DB_DATABASE}
-      DB_USERNAME: ${DB_USERNAME}
-      DB_PASSWORD: ${DB_PASSWORD}
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: merakifruit
+      DB_USERNAME: root
+      DB_PASSWORD: secret
       APP_URL: https://merakifruit.techinnovats.com
-    ports:
-      - "9000:9000"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     volumes:
       - public-data:/var/www/public
       - storage-data:/var/www/storage
@@ -42,8 +38,6 @@ services:
     restart: unless-stopped
     ports:
       - "6080:80"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     volumes:
       - public-data:/var/www/public
       - storage-data:/var/www/storage
@@ -64,10 +58,8 @@ services:
     ports:
       - "6306:3306"
     environment:
-      MYSQL_DATABASE: ${DB_DATABASE}
-      MYSQL_USER: ${DB_USERNAME}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: merakifruit
+      MYSQL_ROOT_PASSWORD: secret
     volumes:
       - db-data:/var/lib/mysql
       - ./merakifruit.sql:/docker-entrypoint-initdb.d/merakifruit.sql
