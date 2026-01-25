@@ -9,10 +9,20 @@
 @section('content')
     <div class="card">
         <div class="card-body">
-            <div class="mb-3">
+            @if(session('success'))
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    {{ session('success') }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            @endif
+
+            <div class="mb-3 d-flex justify-content-between align-items-center">
                 <a href="{{ route('admin.proveedores.create') }}" class="btn btn-primary">
                     <i class="fas fa-plus"></i> Nuevo Proveedor
                 </a>
+                <span>Total Registros: {{ $proveedores->count() }}</span>
             </div>
 
             <div class="table-responsive">

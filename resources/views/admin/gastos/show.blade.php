@@ -19,8 +19,16 @@
         <div class="card-body">
             <div class="row">
                 <div class="col-md-4">
-                    <strong>Proveedor:</strong>
-                    <p>{{ $gasto->proveedor ? $gasto->proveedor->nombre : 'N/A' }}</p>
+                    <strong>Beneficiario:</strong>
+                    <p>
+                        @if($gasto->proveedor)
+                            <span class="badge badge-info">Proveedor</span> {{ $gasto->proveedor->nombre }}
+                        @elseif($gasto->empleado)
+                            <span class="badge badge-warning">Empleado</span> {{ $gasto->empleado->name }}
+                        @else
+                            <span class="text-muted">Sin beneficiario</span>
+                        @endif
+                    </p>
                 </div>
                 <div class="col-md-4">
                     <strong>Fecha:</strong>

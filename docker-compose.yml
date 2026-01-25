@@ -9,14 +9,17 @@ services:
     restart: unless-stopped
     working_dir: /var/www/
     environment:
-      APP_DEBUG: "true"
+      APP_NAME: "${APP_NAME:-WebSistemaJugos}"
+      APP_ENV: "${APP_ENV:-production}"
+      APP_KEY: "${APP_KEY}"
+      APP_DEBUG: "${APP_DEBUG:-false}"
+      APP_URL: "${APP_URL:-https://merakifruit.techinnovats.com}"
       DB_CONNECTION: mysql
       DB_HOST: db
       DB_PORT: 3306
-      DB_DATABASE: merakifruit
-      DB_USERNAME: root
-      DB_PASSWORD: secret
-      APP_URL: https://merakifruit.techinnovats.com
+      DB_DATABASE: "${DB_DATABASE:-merakifruit}"
+      DB_USERNAME: "${DB_USERNAME:-root}"
+      DB_PASSWORD: "${DB_PASSWORD:-secret}"
     volumes:
       - public-data:/var/www/public
       - storage-data:/var/www/storage

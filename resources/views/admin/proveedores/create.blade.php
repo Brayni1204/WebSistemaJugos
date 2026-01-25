@@ -9,23 +9,32 @@
 @section('content')
     <div class="card">
         <div class="card-body">
+            @if ($errors->any())
+                <div class="alert alert-danger">
+                    <ul>
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
             <form action="{{ route('admin.proveedores.store') }}" method="POST">
                 @csrf
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label for="nombre_proveedor">Nombre / Razón Social</label>
-                            <input type="text" name="nombre_proveedor" id="nombre_proveedor" class="form-control" value="{{ old('nombre_proveedor') }}" required>
-                            @error('nombre_proveedor')
+                            <label for="nombre">Nombre / Razón Social</label>
+                            <input type="text" name="nombre" id="nombre" class="form-control" value="{{ old('nombre') }}" required>
+                            @error('nombre')
                                 <span class="text-danger">{{ $message }}</span>
                             @enderror
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label for="ruc_dni">RUC / DNI</label>
-                            <input type="text" name="ruc_dni" id="ruc_dni" class="form-control" value="{{ old('ruc_dni') }}">
-                            @error('ruc_dni')
+                            <label for="documento">RUC / DNI</label>
+                            <input type="text" name="documento" id="documento" class="form-control" value="{{ old('documento') }}">
+                            @error('documento')
                                 <span class="text-danger">{{ $message }}</span>
                             @enderror
                         </div>

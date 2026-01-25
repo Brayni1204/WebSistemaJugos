@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Proveedor;
 use Illuminate\Http\Request;
 
+use Illuminate\Support\Facades\Log;
+
 class ProveedorController extends Controller
 {
     /**
@@ -30,6 +32,8 @@ class ProveedorController extends Controller
      */
     public function store(Request $request)
     {
+        Log::info('Intento de crear proveedor', $request->all());
+        
         $request->validate([
             'nombre' => 'required|string|max:255',
         ]);

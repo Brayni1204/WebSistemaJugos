@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Gasto;
 use App\Models\Proveedor;
 use App\Models\CategoriaGasto;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -17,7 +18,7 @@ class GastoController extends Controller
      */
     public function index()
     {
-        $gastos = Gasto::with(['proveedor', 'user'])->latest()->get();
+        $gastos = Gasto::with(['proveedor', 'user', 'empleado'])->latest()->get();
         return view('admin.gastos.index', compact('gastos'));
     }
 
@@ -28,7 +29,9 @@ class GastoController extends Controller
     {
         $proveedores = Proveedor::all();
         $categorias = CategoriaGasto::all();
-        return view('admin.gastos.create', compact('proveedores', 'categorias'));
+        // Filtrar usuarios que tengan cualquier rol en el sistema
+        $empleados = User::whereHas('roles')->get();
+        return view('admin.gastos.create', compact('proveedores', 'categorias', 'empleados'));
     }
 
     /**
@@ -36,32 +39,65 @@ class GastoController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'proveedor_id' => 'nullable|exists:proveedores,id',
+        // Validación dinámica según el tipo de beneficiario
+        $rules = [
+            'tipo_beneficiario' => 'required|in:proveedor,empleado',
             'fecha_gasto' => 'required|date',
-            'total' => 'required|numeric|min:0',
-            'detalles' => 'required|array|min:1',
-            'detalles.*.producto_nombre' => 'required|string|max:255',
-            'detalles.*.cantidad' => 'required|numeric|min:0',
-            'detalles.*.unidad_medida' => 'required|string|max:50',
-            'detalles.*.precio_unitario' => 'required|numeric|min:0',
-            'detalles.*.precio_total' => 'required|numeric|min:0',
-            'detalles.*.categoria_id' => 'nullable|exists:categorias_gastos,id',
-        ]);
+            'observacion' => 'nullable|string|max:255',
+        ];
+
+        if ($request->tipo_beneficiario === 'proveedor') {
+            $rules['proveedor_id'] = 'required|exists:proveedores,id';
+            $rules['total'] = 'required|numeric|min:0';
+            $rules['detalles'] = 'required|array|min:1';
+            $rules['detalles.*.producto_nombre'] = 'required|string|max:255';
+            $rules['detalles.*.cantidad'] = 'required|numeric|min:0';
+            $rules['detalles.*.unidad_medida'] = 'required|string|max:50';
+            $rules['detalles.*.precio_unitario'] = 'required|numeric|min:0';
+            $rules['detalles.*.precio_total'] = 'required|numeric|min:0';
+        } else {
+            $rules['empleado_id'] = 'required|exists:users,id';
+            $rules['concepto_pago'] = 'required|string|max:255';
+            $rules['monto_pago'] = 'required|numeric|min:0.01';
+        }
+
+        $request->validate($rules);
 
         DB::transaction(function () use ($request) {
-            $gasto = Gasto::create([
-                'proveedor_id' => $request->proveedor_id,
+            $dataGasto = [
                 'user_id' => Auth::id(),
                 'fecha_gasto' => $request->fecha_gasto,
-                'comprobante_tipo' => $request->comprobante_tipo,
-                'comprobante_numero' => $request->comprobante_numero,
-                'total' => $request->total,
                 'observacion' => $request->observacion,
-            ]);
+            ];
 
-            foreach ($request->detalles as $detalle) {
-                $gasto->detalles()->create($detalle);
+            if ($request->tipo_beneficiario === 'proveedor') {
+                $dataGasto['proveedor_id'] = $request->proveedor_id;
+                $dataGasto['comprobante_tipo'] = $request->comprobante_tipo;
+                $dataGasto['comprobante_numero'] = $request->comprobante_numero;
+                $dataGasto['total'] = $request->total;
+                
+                $gasto = Gasto::create($dataGasto);
+                
+                foreach ($request->detalles as $detalle) {
+                    $gasto->detalles()->create($detalle);
+                }
+            } else {
+                // Lógica para empleados
+                $dataGasto['empleado_id'] = $request->empleado_id;
+                $dataGasto['total'] = $request->monto_pago;
+                $dataGasto['comprobante_tipo'] = 'Recibo'; // Por defecto para internos
+                
+                $gasto = Gasto::create($dataGasto);
+
+                // Creamos un detalle único automático para mantener consistencia
+                $gasto->detalles()->create([
+                    'producto_nombre' => $request->concepto_pago,
+                    'cantidad' => 1,
+                    'unidad_medida' => 'servicio',
+                    'precio_unitario' => $request->monto_pago,
+                    'precio_total' => $request->monto_pago,
+                    // 'categoria_id' => null // O asignar una categoría por defecto si existe "Sueldos"
+                ]);
             }
         });
 

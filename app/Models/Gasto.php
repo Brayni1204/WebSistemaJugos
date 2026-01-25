@@ -11,6 +11,7 @@ class Gasto extends Model
 
     protected $fillable = [
         'proveedor_id',
+        'empleado_id',
         'user_id',
         'fecha_gasto',
         'comprobante_tipo',
@@ -22,6 +23,11 @@ class Gasto extends Model
     public function proveedor()
     {
         return $this->belongsTo(Proveedor::class);
+    }
+
+    public function empleado()
+    {
+        return $this->belongsTo(User::class, 'empleado_id');
     }
 
     public function user()
