@@ -82,5 +82,5 @@ use App\Http\Controllers\Admin\CategoriaGastoController;
 use App\Http\Controllers\Admin\ProveedorController;
 
 Route::resource('gastos', GastoController::class)->names('admin.gastos');
-Route::resource('categorias-gastos', CategoriaGastoController::class)->names('admin.categorias-gastos');
-Route::resource('proveedores', ProveedorController::class)->names('admin.proveedores');
+Route::resource('categorias-gastos', CategoriaGastoController::class)->names('admin.categorias-gastos')->parameters(['categorias-gastos' => 'categoria']);
+Route::resource('proveedores', ProveedorController::class)->names('admin.proveedores')->parameters(['proveedores' => 'proveedor']);

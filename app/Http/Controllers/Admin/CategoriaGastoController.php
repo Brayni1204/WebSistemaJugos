@@ -52,7 +52,7 @@ class CategoriaGastoController extends Controller
      */
     public function edit(CategoriaGasto $categoria)
     {
-        return view('admin.categorias-gastos.edit', compact('categoria'));
+        return view('admin.categorias-gastos.edit', ['categoriaGasto' => $categoria]);
     }
 
     /**
