@@ -248,11 +248,22 @@
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
+                        "Accept": "application/json",
                         "X-CSRF-TOKEN": formData._token
                     },
                     body: JSON.stringify(formData)
                 })
-                .then(response => response.json())
+                .then(async response => {
+                    const isJson = response.headers.get('content-type')?.includes('application/json');
+                    const data = isJson ? await response.json() : null;
+
+                    if (!response.ok) {
+                        const error = (data && data.message) || (data && data.error) || response.statusText;
+                        return Promise.reject(error);
+                    }
+
+                    return data;
+                })
                 .then(data => {
                     if (data.success) {
                         Swal.fire("Éxito", "Pedido creado correctamente", "success")
@@ -260,12 +271,24 @@
                                 window.location.href = data.redirect;
                             });
                     } else {
-                        Swal.fire("Error", data.error, "error");
+                        Swal.fire("Error", data.error || "Error desconocido", "error");
                     }
                 })
                 .catch(error => {
                     console.error("❌ Error en la solicitud fetch:", error);
-                    Swal.fire("Error", "Hubo un problema al crear el pedido", "error");
+                    // Si el error es un objeto (ej: validación de Laravel), formatearlo
+                    let mensajeError = "Hubo un problema al crear el pedido";
+                    if (typeof error === 'object' && error !== null) {
+                        if (error.message) mensajeError = error.message;
+                        // Si es error de validación de Laravel (errors object)
+                        if (error.errors) {
+                             mensajeError = Object.values(error.errors).flat().join('\n');
+                        }
+                    } else if (typeof error === 'string') {
+                        mensajeError = error;
+                    }
+                    
+                    Swal.fire("Error", mensajeError, "error");
                 });
         }
     </script>
