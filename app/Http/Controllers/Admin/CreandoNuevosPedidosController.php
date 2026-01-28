@@ -14,8 +14,6 @@ use App\Models\Producto;
 use App\Models\Venta;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
-use Ratchet\Client\Connector; // 👈 CAMBIA esta línea
-use React\EventLoop\Factory;
 
 class CreandoNuevosPedidosController extends Controller
 {
@@ -368,25 +366,5 @@ class CreandoNuevosPedidosController extends Controller
     {
         $pedido->load('detalles.producto', 'mesa');
         return view('admin.pedidos.ticket_cocina', compact('pedido'));
-    }
-
-    private function enviarNotificacion($mensaje)
-    {
-        try {
-            // Este es el nuevo código para enviar el mensaje con la nueva librería
-            $loop = Factory::create();
-            $connector = new Connector($loop);
-
-            $connector('ws://127.0.0.1:8090')->then(function ($conn) use ($mensaje) {
-                $conn->send($mensaje);
-                $conn->close();
-            }, function ($e) {
-                // \Log::error("No se pudo conectar: {$e->getMessage()}");
-            });
-
-            $loop->run();
-        } catch (\Exception $e) {
-            // \Log::error('Error general de WebSocket: ' . $e->getMessage());
-        }
     }
 }
