@@ -887,7 +887,7 @@
             }
 
             function connectWebSocket() {
-                const socket = new WebSocket("ws://127.0.0.1:8090");
+                const socket = new WebSocket("{{ env('WEBSOCKET_URL', 'ws://127.0.0.1:8090') }}");
                 socket.onopen = () => console.log("🟢 Conectado como cliente.");
                 socket.onclose = () => setTimeout(connectWebSocket, 3000);
                 socket.onerror = (error) => console.error("🔴 Error:", error);

@@ -16,7 +16,7 @@ trait NotificaWebSocket
 
             $payload = json_encode(['action' => $accion, 'message' => $mensaje]);
 
-            $connector('ws://127.0.0.1:8090')->then(function ($conn) use ($payload) {
+            $connector(env('WEBSOCKET_URL', 'ws://127.0.0.1:8090'))->then(function ($conn) use ($payload) {
                 $conn->send($payload);
                 $conn->close();
             }, function ($e) {
