@@ -265,7 +265,7 @@
                                         }
                                     @endphp
                                     <button {{-- Usamos la variable $imageUrl precalculada --}}
-                                        onclick="mostrarOpcionesProducto({{ $producto->id }}, '{{ $producto->nombre_producto }}', {{ $producto->precios->precio_venta ?? 0 }}, '{{ $imageUrl }}')"
+                                        onclick="mostrarOpcionesProducto({{ $producto->id }}, '{{ addslashes($producto->nombre_producto) }}', {{ optional($producto->precios)->precio_venta ?? 0 }}, '{{ $imageUrl }}')"
                                         class="producto bg-white border border-gray-300 rounded-lg p-4 shadow-md hover:shadow-xl hover:scale-105 transition transform duration-300 ease-in-out flex flex-col items-center"
                                         data-nombre="{{ strtolower($producto->nombre_producto) }}">
                                         <div class="w-full aspect-[4/5] overflow-hidden rounded-md">
@@ -520,7 +520,7 @@
             });
 
             let carrito = [];
-            let totalDetalle = {{ $pedido->detalles->sum('precio_total') }}; // Suma de los productos ya agregados en el pedido
+            let totalDetalle = @json($pedido->detalles->sum('precio_total')); // Suma de los productos ya agregados en el pedido
             document.getElementById("totalDetalle").innerText = totalDetalle.toFixed(2);
 
             function agregarAlCarrito(id, nombre, precio, imagen, caracteristicas) {
@@ -874,7 +874,7 @@
     </script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            const pedidoId = {{ $pedido->id }};
+            const pedidoId = @json($pedido->id);
 
             function actualizarDetallesCliente() {
                 fetch(`{{ route('pedido.detalles.cliente', ['pedido_id' => $pedido->id]) }}`)
