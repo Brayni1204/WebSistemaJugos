@@ -156,7 +156,7 @@
             <div class="small-box custom-box custom-box-4">
                 <div class="inner">
                     <h3 id="ventasDelDia">S/ 0.00</h3>
-                    <p>Ventas del Día (Hoy)</p>
+                    <p id="ventasDelDiaLabel">Ventas del Día (Hoy)</p>
                 </div>
                 <div class="icon">
                     <i class="fas fa-calendar-day"></i>
@@ -365,6 +365,14 @@
             // Función para actualizar el dashboard
             function updateDashboard(startDate, endDate) {
                 const categoriaId = $('#categoria').val();
+
+                // Actualizar widget de Ventas del Día según el rango seleccionado
+                if (startDate === endDate) {
+                    updateVentasDelDia(startDate);
+                } else {
+                    updateVentasDelDia(); // Por defecto muestra Hoy si es un rango
+                }
+
                 let url = `{{ route('admin.reportes.general') }}?fecha_inicio=${startDate}&fecha_fin=${endDate}`;
                 if (categoriaId) {
                     url += `&categoria_id=${categoriaId}`;
@@ -446,7 +454,10 @@
             });
 			
             // Función para obtener las ventas del día
-            function updateVentasDelDia() {
+            function updateVentasDelDia(fecha = null) {
+                let fechaQuery = fecha;
+                let labelText = "Ventas del Día (Hoy)";
+
                 // Obtener fecha actual del cliente en formato YYYY-MM-DD
                 const now = new Date();
                 const year = now.getFullYear();
@@ -454,7 +465,19 @@
                 const day = String(now.getDate()).padStart(2, '0');
                 const fechaHoy = `${year}-${month}-${day}`;
 
-                const url = `{{ route('admin.reportes.ventasPorDia') }}?fecha=${fechaHoy}`;
+                if (!fechaQuery) {
+                    fechaQuery = fechaHoy;
+                } else {
+                    if (fechaQuery === fechaHoy) {
+                         labelText = "Ventas del Día (Hoy)";
+                    } else {
+                         labelText = `Ventas del Día (${fechaQuery})`;
+                    }
+                }
+
+                $('#ventasDelDiaLabel').text(labelText);
+
+                const url = `{{ route('admin.reportes.ventasPorDia') }}?fecha=${fechaQuery}`;
                 
                 fetch(url)
                     .then(response => response.json())
@@ -477,7 +500,6 @@
             updateDashboard(daterangeInput.data('daterangepicker').startDate.format('YYYY-MM-DD'), daterangeInput
                 .data('daterangepicker').endDate.format('YYYY-MM-DD'));
             
-            updateVentasDelDia();
         });
     </script>
 @stop
