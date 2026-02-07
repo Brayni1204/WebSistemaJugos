@@ -210,8 +210,10 @@ class CajaController extends Controller
         try {
             $fecha = $request->input('fecha', Carbon::now()->toDateString());
 
-            $ventas = Pedido::whereDate('created_at', $fecha)
-                ->where('estado', 'Completado')
+            // 🚀 CORRECCIÓN: Usar modelo Venta para coincidir con "Total Ventas"
+            // Antes usaba Pedido::where('estado', 'Completado'), lo que causaba discrepancias
+            // si el pedido se creó un día y se pagó (venta) otro día.
+            $ventas = Venta::whereDate('created_at', $fecha)
                 ->selectRaw('COALESCE(SUM(total_pago), 0) as total_ventas, COUNT(*) as cantidad_pedidos')
                 ->first();
 
@@ -348,7 +350,7 @@ class CajaController extends Controller
             $ventasQuery = $this->filtrarVentas($request);
 
             // Clonar la consulta para obtener los resultados
-            $ventas = $ventasQuery->clone()->get();
+            $ventas = $ventasQuery->clone()->with('pedido')->get();
             $ventaIds = $ventas->pluck('id');
 
             // Calcular estadísticas de resumen
@@ -382,18 +384,18 @@ class CajaController extends Controller
                 ->orderByDesc('compras_realizadas')
                 ->get();
 
-            // Obtener ventas por método de pago
-            $pedidoIds = $ventas->whereNotNull('pedido_id')->pluck('pedido_id');
-            $ventasPorMetodo = Pedido::whereIn('id', $pedidoIds)
-                ->whereNotNull('metodo_pago')
-                ->where('metodo_pago', '!=', '')
-                ->select('metodo_pago', DB::raw('SUM(total_pago) as total'), DB::raw('COUNT(*) as count'))
-                ->groupBy('metodo_pago')
-                ->get()
-                ->map(function ($item) {
-                    $item->metodo_pago = ucfirst($item->metodo_pago); // Capitalizar
-                    return $item;
-                });
+            // 🚀 CORRECCIÓN: Calcular ventas por método de pago usando la colección de ventas
+            // Esto asegura que la suma coincida EXACTAMENTE con $totalVentas, incluyendo nulos.
+            $ventasPorMetodo = $ventas->groupBy(function ($venta) {
+                if (!$venta->pedido) return 'Venta Directa';
+                return $venta->pedido->metodo_pago ?: 'No Especificado';
+            })->map(function ($grupo, $metodo) {
+                return [
+                    'metodo_pago' => ucfirst($metodo),
+                    'total' => $grupo->sum('total_pago'),
+                    'count' => $grupo->count()
+                ];
+            })->values();
 
             // Devolver JSON estructurado
             return response()->json([
@@ -500,19 +502,19 @@ class CajaController extends Controller
         $fechaInicio = Carbon::parse($request->input('fecha_inicio'))->startOfDay();
         $fechaFin = Carbon::parse($request->input('fecha_fin'))->endOfDay();
 
-        $ventas = Venta::whereBetween('created_at', [$fechaInicio, $fechaFin])->get();
-        $pedidoIds = $ventas->whereNotNull('pedido_id')->pluck('pedido_id');
+        // 🚀 CORRECCIÓN: Usar la misma lógica que el dashboard (agrupación en memoria)
+        $ventas = Venta::whereBetween('created_at', [$fechaInicio, $fechaFin])->with('pedido')->get();
 
-        $ventasPorMetodo = Pedido::whereIn('id', $pedidoIds)
-            ->whereNotNull('metodo_pago')
-            ->where('metodo_pago', '!=', '')
-            ->select('metodo_pago', DB::raw('SUM(total_pago) as total'), DB::raw('COUNT(*) as count'))
-            ->groupBy('metodo_pago')
-            ->get()
-            ->map(function ($item) {
-                $item->metodo_pago = ucfirst($item->metodo_pago);
-                return $item;
-            });
+        $ventasPorMetodo = $ventas->groupBy(function ($venta) {
+            if (!$venta->pedido) return 'Venta Directa';
+            return $venta->pedido->metodo_pago ?: 'No Especificado';
+        })->map(function ($grupo, $metodo) {
+            return (object) [
+                'metodo_pago' => ucfirst($metodo),
+                'total' => $grupo->sum('total_pago'),
+                'count' => $grupo->count()
+            ];
+        })->values();
 
         $data = [
             'metodos' => $ventasPorMetodo,
