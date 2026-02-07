@@ -447,7 +447,15 @@
 			
             // Función para obtener las ventas del día
             function updateVentasDelDia() {
-                const url = `{{ route('admin.reportes.ventasPorDia') }}`;
+                // Obtener fecha actual del cliente en formato YYYY-MM-DD
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                const fechaHoy = `${year}-${month}-${day}`;
+
+                const url = `{{ route('admin.reportes.ventasPorDia') }}?fecha=${fechaHoy}`;
+                
                 fetch(url)
                     .then(response => response.json())
                     
