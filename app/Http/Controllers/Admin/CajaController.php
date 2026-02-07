@@ -65,25 +65,28 @@ class CajaController extends Controller
     public function reporteDiario(Request $request)
     {
         try {
-            $fecha = $request->input('fecha');
+            $fechaInput = $request->input('fecha');
 
             // Verifica que la fecha esté presente
-            if (!$fecha) {
+            if (!$fechaInput) {
                 return response()->json(['error' => 'Fecha requerida'], 400);
             }
 
-            $ventasDelDia = Venta::whereDate('created_at', $fecha)->get();
+            $fechaInicio = Carbon::parse($fechaInput)->startOfDay();
+            $fechaFin = Carbon::parse($fechaInput)->endOfDay();
+
+            $ventasDelDia = Venta::whereBetween('created_at', [$fechaInicio, $fechaFin])->get();
             $totalVentas = $ventasDelDia->sum('total_pago');
             $cantidadPedidos = $ventasDelDia->count();
 
-            $totalGastos = Gasto::whereDate('fecha_gasto', $fecha)->sum('total');
+            $totalGastos = Gasto::whereBetween('fecha_gasto', [$fechaInicio, $fechaFin])->sum('total');
             $gananciaNeta = $totalVentas - $totalGastos;
 
             $estadisticas = $this->obtenerEstadisticas($ventasDelDia);
 
 
             return response()->json([
-                'fecha' => $fecha,
+                'fecha' => $fechaInput,
                 'total_ventas' => $totalVentas,
                 'total_gastos' => $totalGastos,
                 'ganancia_neta' => $gananciaNeta,
@@ -208,17 +211,19 @@ class CajaController extends Controller
     public function ventasPorDia(Request $request)
     {
         try {
-            $fecha = $request->input('fecha', Carbon::now()->toDateString());
+            $fechaInput = $request->input('fecha');
+            $fecha = $fechaInput ? Carbon::parse($fechaInput) : Carbon::now();
+            
+            $inicio = $fecha->copy()->startOfDay();
+            $fin = $fecha->copy()->endOfDay();
 
-            // 🚀 CORRECCIÓN: Usar modelo Venta para coincidir con "Total Ventas"
-            // Antes usaba Pedido::where('estado', 'Completado'), lo que causaba discrepancias
-            // si el pedido se creó un día y se pagó (venta) otro día.
-            $ventas = Venta::whereDate('created_at', $fecha)
+            // 🚀 CORRECCIÓN: Usar whereBetween para evitar problemas de zona horaria
+            $ventas = Venta::whereBetween('created_at', [$inicio, $fin])
                 ->selectRaw('COALESCE(SUM(total_pago), 0) as total_ventas, COUNT(*) as cantidad_pedidos')
                 ->first();
 
             return response()->json([
-                'fecha' => $fecha,
+                'fecha' => $fecha->toDateString(),
                 'total_ventas' => floatval($ventas->total_ventas),
                 'cantidad_pedidos' => intval($ventas->cantidad_pedidos),
             ]);
