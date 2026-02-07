@@ -54,7 +54,7 @@
                             <tr>
                                 <td>{{ $pedido->id }}</td>
                                 <td>{{ $pedido->cliente->nombre ?? 'Datos Reservados' }}</td>
-                                <td>{{ $pedido->created_at->format('d/m/Y H:i') }}</td>
+                                <td>{{ $pedido->created_at->timezone('America/Lima')->format('d/m/Y H:i') }}</td>
                                 <td>S/. {{ number_format($pedido->total_pago, 2) }}</td>
                                 <td>
                                     <span
