@@ -72,13 +72,15 @@ class CajaController extends Controller
                 return response()->json(['error' => 'Fecha requerida'], 400);
             }
 
-            $fechaInicio = Carbon::parse($fechaInput)->startOfDay();
-            $fechaFin = Carbon::parse($fechaInput)->endOfDay();
+            // 🚀 CORRECCIÓN: Convertir rango horario a UTC para coincidir con la BD
+            $fechaInicio = Carbon::parse($fechaInput)->startOfDay()->setTimezone('UTC');
+            $fechaFin = Carbon::parse($fechaInput)->endOfDay()->setTimezone('UTC');
 
             $ventasDelDia = Venta::whereBetween('created_at', [$fechaInicio, $fechaFin])->get();
             $totalVentas = $ventasDelDia->sum('total_pago');
             $cantidadPedidos = $ventasDelDia->count();
 
+            // Nota: Para gastos asumimos la misma lógica si usan timestamp, si es date puro no afecta
             $totalGastos = Gasto::whereBetween('fecha_gasto', [$fechaInicio, $fechaFin])->sum('total');
             $gananciaNeta = $totalVentas - $totalGastos;
 
@@ -108,8 +110,9 @@ class CajaController extends Controller
                 return response()->json(['error' => 'Fecha de inicio de semana requerida'], 400);
             }
 
-            $inicioSemana = Carbon::parse($request->input('inicio_semana'))->startOfWeek();
-            $finSemana = $inicioSemana->copy()->endOfWeek();
+            // 🚀 CORRECCIÓN: Convertir rango horario a UTC
+            $inicioSemana = Carbon::parse($request->input('inicio_semana'))->startOfWeek()->setTimezone('UTC');
+            $finSemana = Carbon::parse($request->input('inicio_semana'))->endOfWeek()->setTimezone('UTC');
 
             $ventas = Venta::whereBetween('created_at', [$inicioSemana, $finSemana])->with('detalles')->get();
             $totalVentas = $ventas->sum('total_pago');
@@ -144,14 +147,16 @@ class CajaController extends Controller
                 return response()->json(['error' => 'Mes requerido'], 400);
             }
 
-            $ventas = Venta::whereYear('created_at', $anio)
-                ->whereMonth('created_at', $mes)
+            // 🚀 CORRECCIÓN: Usar rangos UTC en lugar de whereMonth/whereYear directo
+            $fechaInicio = Carbon::create($anio, $mes, 1)->startOfMonth()->setTimezone('UTC');
+            $fechaFin = Carbon::create($anio, $mes, 1)->endOfMonth()->setTimezone('UTC');
+
+            $ventas = Venta::whereBetween('created_at', [$fechaInicio, $fechaFin])
                 ->with('detalles')
                 ->get();
             $totalVentas = $ventas->sum('total_pago');
 
-            $totalGastos = Gasto::whereYear('fecha_gasto', $anio)
-                ->whereMonth('fecha_gasto', $mes)
+            $totalGastos = Gasto::whereBetween('fecha_gasto', [$fechaInicio, $fechaFin])
                 ->sum('total');
             $gananciaNeta = $totalVentas - $totalGastos;
 
@@ -175,15 +180,16 @@ class CajaController extends Controller
     public function reportePorRango(Request $request)
     {
         try {
-            $fechaInicio = $request->input('fecha_inicio');
-            $fechaFin = $request->input('fecha_fin');
+            $fechaInicioInput = $request->input('fecha_inicio');
+            $fechaFinInput = $request->input('fecha_fin');
 
-            if (!$fechaInicio || !$fechaFin) {
+            if (!$fechaInicioInput || !$fechaFinInput) {
                 return response()->json(['error' => 'Fechas de inicio y fin requeridas'], 400);
             }
 
-            $fechaInicio = Carbon::parse($fechaInicio);
-            $fechaFin = Carbon::parse($fechaFin)->endOfDay();
+            // 🚀 CORRECCIÓN: Convertir rango horario a UTC
+            $fechaInicio = Carbon::parse($fechaInicioInput)->startOfDay()->setTimezone('UTC');
+            $fechaFin = Carbon::parse($fechaFinInput)->endOfDay()->setTimezone('UTC');
 
             $ventas = Venta::whereBetween('created_at', [$fechaInicio, $fechaFin])->with('detalles')->get();
             $totalVentas = $ventas->sum('total_pago');
@@ -214,10 +220,10 @@ class CajaController extends Controller
             $fechaInput = $request->input('fecha');
             $fecha = $fechaInput ? Carbon::parse($fechaInput) : Carbon::now();
             
-            $inicio = $fecha->copy()->startOfDay();
-            $fin = $fecha->copy()->endOfDay();
+            // 🚀 CORRECCIÓN: Usar whereBetween con UTC explícito para evitar problemas de zona horaria
+            $inicio = $fecha->copy()->startOfDay()->setTimezone('UTC');
+            $fin = $fecha->copy()->endOfDay()->setTimezone('UTC');
 
-            // 🚀 CORRECCIÓN: Usar whereBetween para evitar problemas de zona horaria
             $ventas = Venta::whereBetween('created_at', [$inicio, $fin])
                 ->selectRaw('COALESCE(SUM(total_pago), 0) as total_ventas, COUNT(*) as cantidad_pedidos')
                 ->first();
@@ -257,8 +263,11 @@ class CajaController extends Controller
     public function productosMasVendidos(Request $request)
     {
         try {
-            $fechaInicio = $request->input('fecha_inicio', Carbon::now()->startOfMonth()->toDateString());
-            $fechaFin = $request->input('fecha_fin', Carbon::now()->toDateString());
+            $fechaInicioInput = $request->input('fecha_inicio', Carbon::now()->startOfMonth()->toDateString());
+            $fechaFinInput = $request->input('fecha_fin', Carbon::now()->toDateString());
+
+            $fechaInicio = Carbon::parse($fechaInicioInput)->startOfDay()->setTimezone('UTC');
+            $fechaFin = Carbon::parse($fechaFinInput)->endOfDay()->setTimezone('UTC');
 
             $productos = DB::table('detalle_ventas')
                 ->join('productos', 'detalle_ventas.producto_id', '=', 'productos.id')
@@ -281,20 +290,20 @@ class CajaController extends Controller
     {
         try {
             $tipo = $request->input('tipo', 'diario'); // 'diario', 'semanal', 'mensual'
-            $fecha = Carbon::now();
+            $fecha = Carbon::now(); // Esto usa APP_TIMEZONE (Lima)
 
             switch ($tipo) {
                 case 'semanal':
-                    $inicio = $fecha->startOfWeek()->toDateString();
-                    $fin = $fecha->endOfWeek()->toDateString();
+                    $inicio = $fecha->copy()->startOfWeek()->startOfDay()->setTimezone('UTC');
+                    $fin = $fecha->copy()->endOfWeek()->endOfDay()->setTimezone('UTC');
                     break;
                 case 'mensual':
-                    $inicio = $fecha->startOfMonth()->toDateString();
-                    $fin = $fecha->endOfMonth()->toDateString();
+                    $inicio = $fecha->copy()->startOfMonth()->startOfDay()->setTimezone('UTC');
+                    $fin = $fecha->copy()->endOfMonth()->endOfDay()->setTimezone('UTC');
                     break;
-                default:
-                    $inicio = $fecha->toDateString();
-                    $fin = $inicio;
+                default: // diario
+                    $inicio = $fecha->copy()->startOfDay()->setTimezone('UTC');
+                    $fin = $fecha->copy()->endOfDay()->setTimezone('UTC');
                     break;
             }
 
@@ -304,8 +313,8 @@ class CajaController extends Controller
 
             return response()->json([
                 'tipo' => $tipo,
-                'inicio' => $inicio,
-                'fin' => $fin,
+                'inicio' => $inicio->toDateTimeString(), // UTC
+                'fin' => $fin->toDateTimeString(),       // UTC
                 'total_ventas' => floatval($ventas->total_ventas),
                 'cantidad_pedidos' => intval($ventas->cantidad_pedidos),
             ]);
@@ -323,8 +332,9 @@ class CajaController extends Controller
 
         // Filtro de fecha
         if ($request->filled('fecha_inicio') && $request->filled('fecha_fin')) {
-            $fechaInicio = Carbon::parse($request->input('fecha_inicio'))->startOfDay();
-            $fechaFin = Carbon::parse($request->input('fecha_fin'))->endOfDay();
+            // 🚀 CORRECCIÓN: Convertir rango horario a UTC
+            $fechaInicio = Carbon::parse($request->input('fecha_inicio'))->startOfDay()->setTimezone('UTC');
+            $fechaFin = Carbon::parse($request->input('fecha_fin'))->endOfDay()->setTimezone('UTC');
             $query->whereBetween('created_at', [$fechaInicio, $fechaFin]);
         }
 
@@ -363,8 +373,8 @@ class CajaController extends Controller
             $cantidadPedidos = $ventas->count();
 
             // Calcular Gastos y Ganancia
-            $fechaInicio = Carbon::parse($request->input('fecha_inicio'))->startOfDay();
-            $fechaFin = Carbon::parse($request->input('fecha_fin'))->endOfDay();
+            $fechaInicio = Carbon::parse($request->input('fecha_inicio'))->startOfDay()->setTimezone('UTC');
+            $fechaFin = Carbon::parse($request->input('fecha_fin'))->endOfDay()->setTimezone('UTC');
             
             $totalGastos = Gasto::whereBetween('fecha_gasto', [$fechaInicio, $fechaFin])->sum('total');
             $gananciaNeta = $totalVentas - $totalGastos;
@@ -427,8 +437,8 @@ class CajaController extends Controller
     // 🔹 Exportar Productos Más Vendidos
     public function exportProductosMasVendidos(Request $request, $format)
     {
-        $fechaInicio = Carbon::parse($request->input('fecha_inicio'))->startOfDay();
-        $fechaFin = Carbon::parse($request->input('fecha_fin'))->endOfDay();
+        $fechaInicio = Carbon::parse($request->input('fecha_inicio'))->startOfDay()->setTimezone('UTC');
+        $fechaFin = Carbon::parse($request->input('fecha_fin'))->endOfDay()->setTimezone('UTC');
 
         $ventas = Venta::whereBetween('created_at', [$fechaInicio, $fechaFin])->get();
         $ventaIds = $ventas->pluck('id');
@@ -467,8 +477,8 @@ class CajaController extends Controller
     // 🔹 Exportar Clientes Frecuentes
     public function exportClientesFrecuentes(Request $request, $format)
     {
-        $fechaInicio = Carbon::parse($request->input('fecha_inicio'))->startOfDay();
-        $fechaFin = Carbon::parse($request->input('fecha_fin'))->endOfDay();
+        $fechaInicio = Carbon::parse($request->input('fecha_inicio'))->startOfDay()->setTimezone('UTC');
+        $fechaFin = Carbon::parse($request->input('fecha_fin'))->endOfDay()->setTimezone('UTC');
 
         $ventas = Venta::whereBetween('created_at', [$fechaInicio, $fechaFin])->get();
         $ventaIds = $ventas->pluck('id');
@@ -504,8 +514,8 @@ class CajaController extends Controller
     // 🔹 Exportar Ventas por Método de Pago
     public function exportVentasPorMetodo(Request $request, $format)
     {
-        $fechaInicio = Carbon::parse($request->input('fecha_inicio'))->startOfDay();
-        $fechaFin = Carbon::parse($request->input('fecha_fin'))->endOfDay();
+        $fechaInicio = Carbon::parse($request->input('fecha_inicio'))->startOfDay()->setTimezone('UTC');
+        $fechaFin = Carbon::parse($request->input('fecha_fin'))->endOfDay()->setTimezone('UTC');
 
         // 🚀 CORRECCIÓN: Usar la misma lógica que el dashboard (agrupación en memoria)
         $ventas = Venta::whereBetween('created_at', [$fechaInicio, $fechaFin])->with('pedido')->get();
